@@ -83,7 +83,8 @@ mod <- function(x, eta, beta, ...)
   if(blen == 2) Tvec <- c(T1(x,...)/norm1, T2(x,...)/norm2)
   if(blen == 3) Tvec <- c(T1(x,...)/norm1, T2(x,...)/norm2,T3(x,...)/norm3)
   
-  1 + eta*S(x, ...)$s + (1-eta)*as.numeric(crossprod(beta,Tvec))
+  mix <- 1 + eta*S(x, ...)$s + (1-eta)*as.numeric(crossprod(beta,Tvec))
+  return(mix)
   
 }
 
