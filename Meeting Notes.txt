@@ -1,0 +1,10 @@
+March 2, 2023:
+library(truncnorm)
+mukhopadhyay paper
+replicate the plots
+
+March 16, 2023:
+Sticking with continuous G
+Keep track of other bases
+3 new papers
+implement AIC and BIC in simulation with and without indicators
