@@ -84,7 +84,8 @@ mod <- function(x, eta, beta, ...)
   if(blen == 3) Tvec <- c(T1(x,...)/norm1, T2(x,...)/norm2,T3(x,...)/norm3)
   
   mix <- 1 + eta*S(x, ...)$s + (1-eta)*as.numeric(crossprod(beta,Tvec))
-  return(mix)
+  back <- 1 + as.numeric(crossprod(beta,Tvec))
+  return(list(mix = mix, back = back))
   
 }
 
@@ -94,10 +95,9 @@ neg_loglikelihood <- function(theta, data, mean_sig, sd_sig)
   beta = theta[-1]
   y <- sapply(data, function(t) mod(x = t, eta = eta,
                                    beta = beta, mean = mean_sig, 
-                                   sd = sd_sig))
+                                   sd = sd_sig)$mix)
   -sum(log(y))
 }
-
 
 score <- function(theta, data, mean_sig, sd_sig)
 {
@@ -108,7 +108,7 @@ score <- function(theta, data, mean_sig, sd_sig)
   {
     1/mod(x = t,  eta = eta,
           beta = beta, mean = mean_sig,
-          sd = sd_sig)
+          sd = sd_sig)$mix
   })
 
   blen <- length(beta)
@@ -145,3 +145,43 @@ score <- function(theta, data, mean_sig, sd_sig)
   ))
 }
 
+mod_back <- function(x, beta, ...)
+{
+  blen <- length(beta)
+  if(blen == 1) Tvec <- T1(x,...)/norm1
+  if(blen == 2) Tvec <- c(T1(x,...)/norm1, T2(x,...)/norm2)
+  if(blen == 3) Tvec <- c(T1(x,...)/norm1, T2(x,...)/norm2,T3(x,...)/norm3)
+  
+  back <- 1 + as.numeric(crossprod(beta,Tvec))
+  return(back)
+}
+
+neg_loglikelihood_back <- function(theta, data, 
+                                   mean_bkg, sd_bkg)
+{
+  beta <- theta
+  y <- sapply(data, function(t) mod_back(x = t,
+                                         beta = beta,
+                                         mean = mean_bkg,
+                                         sd = sd_bkg))
+  -sum(log(y))
+}
+
+score_back <- function(theta, data, mean_bkg, sd_bkg)
+{
+  return(0)
+}
+
+
+actual <- function(x, mean_back = mean_back, 
+                   sd_back = sd_back,
+                   mean_sig = mean_sig, sd_sig = sd_sig,
+                   bkg_prop)
+{
+  require(truncnorm)
+  fs <- dtruncnorm(x, a = 0, b= 1,
+                   mean = mean_sig, sd = sd_sig)
+  fb <- dtruncnorm(x, a = 0, b= 1,
+                   mean = mean_back, sd = sd_back)
+  return(bkg_prop*fb + (1-bkg_prop)*fs)
+}
