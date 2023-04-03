@@ -145,33 +145,6 @@ score <- function(theta, data, mean_sig, sd_sig)
   ))
 }
 
-mod_back <- function(x, beta, ...)
-{
-  blen <- length(beta)
-  if(blen == 1) Tvec <- T1(x,...)/norm1
-  if(blen == 2) Tvec <- c(T1(x,...)/norm1, T2(x,...)/norm2)
-  if(blen == 3) Tvec <- c(T1(x,...)/norm1, T2(x,...)/norm2,T3(x,...)/norm3)
-  
-  back <- 1 + as.numeric(crossprod(beta,Tvec))
-  return(back)
-}
-
-neg_loglikelihood_back <- function(theta, data, 
-                                   mean_bkg, sd_bkg)
-{
-  beta <- theta
-  y <- sapply(data, function(t) mod_back(x = t,
-                                         beta = beta,
-                                         mean = mean_bkg,
-                                         sd = sd_bkg))
-  -sum(log(y))
-}
-
-score_back <- function(theta, data, mean_bkg, sd_bkg)
-{
-  return(0)
-}
-
 
 actual <- function(x, mean_back = mean_back, 
                    sd_back = sd_back,
