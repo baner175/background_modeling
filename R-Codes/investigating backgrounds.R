@@ -3,7 +3,6 @@ rm(list = ls())
 source('functions.R')
 source('bkg_MLE functions.R')
 
-library(patchwork)
 library(ggplot2)
 
 par(mfrow = c(1,3))
