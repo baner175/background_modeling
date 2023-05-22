@@ -158,3 +158,24 @@ actual <- function(x, mean_back = mean_back,
                    mean = mean_back, sd = sd_back)
   return(bkg_prop*fb + (1-bkg_prop)*fs)
 }
+
+mod_back_new <- function(x, beta, ...)
+{
+  blen <- length(beta)
+  if(blen == 1) Tvec <- T1(x,...)/norm1
+  if(blen == 2) Tvec <- c(T1(x,...)/norm1, T2(x,...)/norm2)
+  if(blen == 3) Tvec <- c(T1(x,...)/norm1, T2(x,...)/norm2,T3(x,...)/norm3)
+  
+  back <- 1 + as.numeric(crossprod(beta,Tvec))
+  return(back)
+}
+
+neg_loglikelihood_back_new <- function(theta, data, mean_sig, sd_sig)
+{
+  beta <- theta
+  y <- sapply(data, function(t) mod_back_new(x = t,
+                                         beta = beta, mean = mean_sig,
+                                         sd = sd_sig))
+  -sum(log(y))
+}
+
