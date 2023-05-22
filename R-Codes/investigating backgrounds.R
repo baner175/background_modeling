@@ -46,8 +46,6 @@ back_mle1_old_full <- nlm(f = neg_loglikelihood_back, data = data,
 (beta_back_old <- back_mle1_old$estimate)
 (beta_back_old_full <- back_mle1_old_full$estimate)
 
-hist(data_back, probability = TRUE, breaks = 20)
-
 ys1 <- sapply(xs, function(t)
 {
   mod(t, eta = eta, beta = beta, mean = 0.4, sd = 0.1)
@@ -67,17 +65,6 @@ bkml_old_full1 <- sapply(xs, function(t)
 {
   mod_back(t, beta = beta_back_old_full)
 })
-
-lines(xs, ys1[2,], col = 'green', lwd =2, lty = 2) # background from the mixed data with new basis
-lines(xs, bkml_new1, col = 'orange', lwd =2, lty = 2) # background from background data with new basis
-lines(xs, bkml_old1, col = 'blue', lwd =2, lty = 2) # background from background data with old basis
-lines(xs, bkml_old_full1, col = 'purple', lwd =2, lty = 2) # background from mixed data with old basis
-
-lines(xs, dtruncnorm(xs, mean = 5, sd = 5,
-                     a = 0, b = 1),
-      col = 'black', lwd = 2, lty = 1) # plotting the actual background
-lines(xs, dunif(xs), col = 'red', lwd = 2, lty = 1) # proposed background
-
 
 colors <- c('mixed data, new basis' = 'green',
             'background data, new basis' = 'orange',
@@ -137,9 +124,6 @@ back_mle2_old_full <- nlm(f = neg_loglikelihood_back, data = data,
 (beta_back_old <- back_mle2_old$estimate)
 (beta_back_old_full <- back_mle2_old_full$estimate)
 
-hist(data_back, probability = TRUE, breaks = 20)
-xs <- seq(0,1,0.01)
-
 ys2 <- sapply(xs, function(t)
 {
   mod(t, eta = eta, beta = beta, mean = 0.4, sd = 0.1)
@@ -159,16 +143,6 @@ bkml_old_full2 <- sapply(xs, function(t)
 {
   mod_back(t, beta = beta_back_old_full)
 })
-
-lines(xs, ys2[2,], col = 'green', lwd =2, lty = 2) # background from the mixed data with new basis
-lines(xs, bkml_new2, col = 'orange', lwd =2, lty = 2) # background from background data with new basis
-lines(xs, bkml_old2, col = 'blue', lwd =2, lty = 2) # background from background data with old basis
-lines(xs, bkml_old_full2, col = 'purple', lwd =2, lty = 2) # background from mixed data with old basis
-
-lines(xs, dtruncnorm(xs, mean = 5, sd = 5,
-                     a = 0, b = 1),
-      col = 'black', lwd = 2, lty = 1) # plotting the actual background
-lines(xs, dunif(xs), col = 'red', lwd = 2, lty = 1) # proposed background
 
 plt_T2 <- ggplot(mapping=aes(x = data_back)) + 
     geom_histogram(mapping = aes(y = after_stat(density)),
@@ -245,16 +219,6 @@ bkml_old_full3 <- sapply(xs, function(t)
 {
   mod_back(t, beta = beta_back_old_full)
 })
-
-lines(xs, ys3[2,], col = 'green', lwd =2, lty = 2) # background from the mixed data with new basis
-lines(xs, bkml_new3, col = 'orange', lwd =2, lty = 2) # background from background data with new basis
-lines(xs, bkml_old3, col = 'blue', lwd =2, lty = 2) # background from background data with old basis
-lines(xs, bkml_old_full3, col = 'purple', lwd =2, lty = 2) # background from mixed data with old basis
-
-lines(xs, dtruncnorm(xs, mean = 5, sd = 5,
-                     a = 0, b = 1),
-      col = 'black', lwd = 2, lty = 1) # plotting the actual background
-lines(xs, dunif(xs), col = 'red', lwd = 2, lty = 1) # proposed background
 
 plt_T3 <- ggplot(mapping=aes(x = data_back)) + 
     geom_histogram(mapping = aes(y = after_stat(density)),
