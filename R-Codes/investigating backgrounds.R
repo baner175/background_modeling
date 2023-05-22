@@ -4,6 +4,7 @@ source('functions.R')
 source('bkg_MLE functions.R')
 
 library(patchwork)
+library(ggplot2)
 
 par(mfrow = c(1,3))
 
@@ -106,10 +107,7 @@ plt_T1 <- ggplot(mapping=aes(x = data_back)) +
             , lwd = 1.1) + 
   geom_line(mapping = aes(x = xs, y = dunif(xs),
                           color = 'proposed background'), lwd = 1.1) +
-  geom_line(mapping = aes(x = xs, y = 0.97*dtruncnorm(xs, mean = 5, sd = 5,
-                                                      a = 0, b = 1) + 
-                            0.03*dtruncnorm(xs, mean = 0.4, sd = 0.1,
-                                            a = 0, b = 1),
+  geom_line(mapping = aes(x = xs, y = y_real,
                           color = 'true model'), lwd = 1.1) + 
   labs(x = "background data",
        y = "",
@@ -193,10 +191,7 @@ plt_T2 <- ggplot(mapping=aes(x = data_back)) +
             , lwd = 1.1) + 
   geom_line(mapping = aes(x = xs, y = dunif(xs),
                           color = 'proposed background'), lwd = 1.1) +
-  geom_line(mapping = aes(x = xs, y = 0.97*dtruncnorm(xs, mean = 5, sd = 5,
-                                                      a = 0, b = 1) + 
-                            0.03*dtruncnorm(xs, mean = 0.4, sd = 0.1,
-                                            a = 0, b = 1),
+  geom_line(mapping = aes(x = xs, y = y_real,
                           color = 'true model'), lwd = 1.1) +
   labs(x = "background data",
        y = "",
@@ -282,10 +277,7 @@ plt_T3 <- ggplot(mapping=aes(x = data_back)) +
               , lwd = 1.1) + 
     geom_line(mapping = aes(x = xs, y = dunif(xs),
                             color = 'proposed background'), lwd = 1.1) + 
-  geom_line(mapping = aes(x = xs, y = 0.97*dtruncnorm(xs, mean = 5, sd = 5,
-                                                      a = 0, b = 1) + 
-                            0.03*dtruncnorm(xs, mean = 0.4, sd = 0.1,
-                                            a = 0, b = 1),
+  geom_line(mapping = aes(x = xs, y = y_real,
                           color = 'true model'), lwd = 1.1) +
     labs(x = "background data",
          y = "",
