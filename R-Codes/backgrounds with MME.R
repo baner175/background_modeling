@@ -85,14 +85,6 @@ den_backD_newB_1 <- apply(res_backD_newB_1$T_mat, 2, function(t){
   1 + as.numeric(crossprod(t, res_backD_newB_1$tau))
 })
 
-colors <- c('mixed data, new basis' = 'green',
-            'background data, new basis' = 'orange',
-            'background data, old basis' = 'blue',
-            'mixed data, old basis' = 'purple',
-            'actual background' = 'black',
-            'proposed background' = 'red',
-            'true model' = 'pink')
-
 
 plt_T1 <- ggplot(mapping=aes(x = data_back)) + 
   geom_histogram(mapping = aes(y = after_stat(density)),
@@ -120,7 +112,13 @@ plt_T1 <- ggplot(mapping=aes(x = data_back)) +
   labs(x = "background data",
        y = "",
        color = "Legend") +
-  scale_color_manual(values = colors) + 
+  scale_color_manual(values = c('mixed data, new basis' = 'green',
+                                'background data, new basis' = 'orange',
+                                'background data, old basis' = 'blue',
+                                'mixed data, old basis' = 'purple',
+                                'actual background' = 'black',
+                                'proposed background' = 'red',
+                                'true model' = 'pink')) + 
   ggtitle(bquote(T[1]))
 
 #------------------------------------------------------------------------
@@ -186,7 +184,13 @@ plt_T2 <- ggplot(mapping=aes(x = data_back)) +
   labs(x = "background data",
        y = "",
        color = "Legend") +
-  scale_color_manual(values = colors) + 
+  scale_color_manual(values = c('mixed data, new basis' = 'green',
+                                'background data, new basis' = 'orange',
+                                'background data, old basis' = 'blue',
+                                'mixed data, old basis' = 'purple',
+                                'actual background' = 'black',
+                                'proposed background' = 'red',
+                                'true model' = 'pink')) + 
   ggtitle(bquote(T[1] + T[2]))
 #------------------------------------------------------------------------
 
@@ -251,7 +255,13 @@ plt_T3 <- ggplot(mapping=aes(x = data_back)) +
   labs(x = "background data",
        y = "",
        color = "Legend") +
-  scale_color_manual(values = colors) + 
+  scale_color_manual(values = c('mixed data, new basis' = 'green',
+                                'background data, new basis' = 'orange',
+                                'background data, old basis' = 'blue',
+                                'mixed data, old basis' = 'purple',
+                                'actual background' = 'black',
+                                'proposed background' = 'red',
+                                'true model' = 'pink')) + 
   ggtitle(bquote(T[1] + T[2] + T[3]))
 
 ggpubr::ggarrange(plt_T1, plt_T2, plt_T3,
