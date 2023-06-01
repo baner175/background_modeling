@@ -91,22 +91,23 @@ plt_T1 <- ggplot(mapping=aes(x = data_back)) +
                  bins = 20, fill = 'steelblue', col = 'black') + 
   geom_line(mapping = aes(x = data, y = den_mixD_newB_1,
                           color = 'mixed data, new basis'),
-            linetype = 'dashed', lwd = 1.1) +
+            linetype = 'dashed', lwd = 1.1, alpha = 0.3) +
   geom_line(mapping = aes(x = data_back, y = den_backD_newB_1,
                           color = 'background data, new basis'),
-            linetype = 'dashed', lwd = 1.1) + 
+            linetype = 'dashed', lwd = 1.1,  alpha = 0.3) + 
   geom_line(mapping = aes(x = data_back, y = den_backD_oldB_1,
                           color = 'background data, old basis'),
-            linetype = 'dashed', lwd = 1.1) +
+            linetype = 'dashed', lwd = 1.1,  alpha = 0.3) +
   geom_line(mapping = aes(x = data, y = den_mixD_oldB_1,
                           color = 'mixed data, old basis'),
-            linetype = 'dashed', lwd = 1.1) + 
+            linetype = 'dashed', lwd = 1.1,  alpha = 0.3) + 
   geom_line(mapping = aes(x = xs, y = dtruncnorm(xs, mean = 5, sd = 5,
                                                  a = 0, b = 1),
                           color = 'actual background')
             , lwd = 1.1) + 
   geom_line(mapping = aes(x = xs, y = dunif(xs),
-                          color = 'proposed background'), lwd = 1.1) +
+                          color = 'proposed background'), lwd = 1.1, 
+            linetype = 'dashed', alpha = 0.3) +
   geom_line(mapping = aes(x = xs, y = y_real,
                           color = 'true model'), lwd = 1.1) + 
   labs(x = "background data",
@@ -163,22 +164,23 @@ plt_T2 <- ggplot(mapping=aes(x = data_back)) +
                  bins = 20, fill = 'steelblue', col = 'black') + 
   geom_line(mapping = aes(x = data, y = den_mixD_newB_2,
                           color = 'mixed data, new basis'),
-            linetype = 'dashed', lwd = 1.1) +
+            linetype = 'dashed', lwd = 1.1, alpha = 0.3) +
   geom_line(mapping = aes(x = data_back, y = den_backD_newB_2,
                           color = 'background data, new basis'),
-            linetype = 'dashed', lwd = 1.1) + 
+            linetype = 'dashed', lwd = 1.1, alpha = 0.3) + 
   geom_line(mapping = aes(x = data_back, y = den_backD_oldB_2,
                           color = 'background data, old basis'),
-            linetype = 'dashed', lwd = 1.1) +
+            linetype = 'dashed', lwd = 1.1,alpha = 0.3) +
   geom_line(mapping = aes(x = data, y = den_mixD_oldB_2,
                           color = 'mixed data, old basis'),
-            linetype = 'dashed', lwd = 1.1) + 
+            linetype = 'dashed', lwd = 1.1,alpha = 0.3) + 
   geom_line(mapping = aes(x = xs, y = dtruncnorm(xs, mean = 5, sd = 5,
                                                  a = 0, b = 1),
                           color = 'actual background')
             , lwd = 1.1) + 
   geom_line(mapping = aes(x = xs, y = dunif(xs),
-                          color = 'proposed background'), lwd = 1.1) +
+                          color = 'proposed background'), lwd = 1.1,
+            alpha = 0.3) +
   geom_line(mapping = aes(x = xs, y = y_real,
                           color = 'true model'), lwd = 1.1) + 
   labs(x = "background data",
@@ -249,7 +251,8 @@ plt_T3 <- ggplot(mapping=aes(x = data_back)) +
                           color = 'actual background')
             , lwd = 1.1) + 
   geom_line(mapping = aes(x = xs, y = dunif(xs),
-                          color = 'proposed background'), lwd = 1.1) +
+                          color = 'proposed background'), lwd = 1.1,
+            linetype = 'dashed') +
   geom_line(mapping = aes(x = xs, y = y_real,
                           color = 'true model'), lwd = 1.1) + 
   labs(x = "background data",
