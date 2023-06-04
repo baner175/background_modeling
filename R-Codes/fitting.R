@@ -1,3 +1,52 @@
+mean_sig <-  0.4
+mean_back <- 5
+sd_sig <- 0.1
+sd_back <- 5
+
+
+make_data <- function(n = 2e3, mean_back = mean_back, 
+                      sd_back = sd_back,
+                      mean_sig = mean_sig, sd_sig = sd_sig,
+                      bkg_prop, seed = NULL)
+{
+  require(truncnorm)
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
+  back <- rtruncnorm(n, a = 0, b= 1, mean = mean_back,
+                     sd = sd_back)
+  sig <- rtruncnorm(n, a = 0, b= 1, mean = mean_sig,
+                    sd = sd_sig)
+  u <- runif(n)
+  obs <- ifelse(u<bkg_prop, back,sig)
+  
+  return(list(signal = sig, background = back, observed = obs))
+}
+
+S <- function(x, mean, sd)
+{
+  require(truncnorm)
+  f_sig <- dtruncnorm(x, mean = mean, sd = sd, a = 0, b = 1)
+  norm <- (1/(2*sd*sqrt(pi)))*(pnorm(1,mean, sd/sqrt(2)) - 
+                                 pnorm(0,mean, sd/sqrt(2)))/
+    (pnorm(1, mean, sd) - pnorm(0, mean, sd))^2 - 1
+  norm <- sqrt(norm)
+  return(list('s' = f_sig - 1, 's1' = (f_sig-1)/norm))
+}
+
+actual <- function(x, mean_back = mean_back, 
+                   sd_back = sd_back,
+                   mean_sig = mean_sig, sd_sig = sd_sig,
+                   bkg_prop)
+{
+  require(truncnorm)
+  fs <- dtruncnorm(x, a = 0, b= 1,
+                   mean = mean_sig, sd = sd_sig)
+  fb <- dtruncnorm(x, a = 0, b= 1,
+                   mean = mean_back, sd = sd_back)
+  return(bkg_prop*fb + (1-bkg_prop)*fs)
+}
+
 # source('functions.R')
 
 par(mfrow = c(1,3))
