@@ -2,8 +2,8 @@ rm(list=ls())
 
 source('functions_beta.R')
 
-data <- make_data(a_back = 1, b_back = 5,
-                  a_sig = 16, b_sig = 2,
+data <- make_data(a_back = a_back, b_back = b_back,
+                  a_sig = a_sig, b_sig = b_sig,
                   bkg_prop = 1-sig_prop,
                   seed = 12345)
 
