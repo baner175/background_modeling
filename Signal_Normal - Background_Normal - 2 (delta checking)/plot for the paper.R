@@ -21,10 +21,10 @@ ggplot(data.frame(x = c(l,u)), aes(x)) +
   scale_linetype_manual('', values = c('true background' = 2,
                                    'true mixture' = 1,
                                    'proposed background' = 4))+
-  geom_vline(xintercept = c(M_lower, M_upper), alpha = 0.5,
+  geom_vline(xintercept = c(M_lower, M_upper), alpha = 0.3,
              lwd = 1) + 
   ylab('') + xlab('') + 
-  annotate('text', x = c(M_lower, M_upper),
+  annotate('text', x = c(M_lower-0.1, M_upper+0.1),
            y = c(0,0), 
            label = c(TeX('$\\mu_s-d_\\epsilon$'), TeX('$\\mu_s+d_\\epsilon$')),
            size = 10) + 

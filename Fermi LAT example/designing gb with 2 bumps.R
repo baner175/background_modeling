@@ -106,10 +106,10 @@ ggplot(data=data.frame(x = c(l,u)), mapping = aes(x = x)) +
   stat_function(fun = kde, col = 'black', lwd = 1.5) + 
   # stat_function(fun = fs, col = 'blue') + 
   stat_function(fun = gb, col = 'orange', lwd = 1.5) + 
-  geom_vline(xintercept = c(M_lower, M_upper), alpha = 0.5,
+  geom_vline(xintercept = c(M_lower, M_upper), alpha = 0.3,
              lwd = 1.5) + 
   xlab('x') + ylab('Density') +
-  annotate('text', x = c(M_lower, M_upper),
+  annotate('text', x = c(M_lower-0.1, M_upper+0.1),
            y = c(0,0), 
            label = c(TeX('$\\mu_s-d_\\epsilon$'), TeX('$\\mu_s+d_\\epsilon$')),
            size = 10) + 
