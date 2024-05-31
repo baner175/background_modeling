@@ -1,8 +1,9 @@
 rm(list = ls())
 source('bases on [l,u] - gb with 2 bumps.R')
-library(doSNOW)
 library(foreach)
+library(doSNOW)
 library(iterators)
+library(parallel)
 
 n_rep <- 1e4 # do it for 1e4
 n_samp <- 5e3
@@ -14,7 +15,7 @@ fb <- function(t) dtrunc(t, spec = 'norm', a = l, b = u,
 f_mix <- function(t) eta_true*fs(t) + (1-eta_true)*fb(t)
 
 
-eta_seq <- seq(0, 0.06, 0.03)
+eta_seq <- c(0, seq(0.03, 0.09, 0.01))
 theta_vec <- c()
 t_stat_vec <- c()
 seed <- 12345
@@ -53,15 +54,16 @@ stopCluster(cl)
 
 print(time_elapsed) #took 17 minutes
 
-mean(result_eta[[1]][,1]>qnorm(0.95)) # 0.0077
-mean(result_eta[[2]][,1]>qnorm(0.95)) # 0.5904
-mean(result_eta[[3]][,1]>qnorm(0.95)) # 0.9939
+# mean(result_eta[[1]][,1]>qnorm(0.95)) # 0.0077
+# mean(result_eta[[2]][,1]>qnorm(0.95)) # 0.5904
+# mean(result_eta[[3]][,1]>qnorm(0.95)) # 0.9939
 
 (filename <- paste0('nrep_',n_rep, '__nsamp_', n_samp, '__seed_',seed,'.csv'))
 
 levels <- sapply(result_eta, function(x) mean(x[,1] > qnorm(0.95)))
 res_df <- data.frame(eta = eta_seq, levels = levels)
 write.csv(res_df, file = file.path('simulation_results/', filename), row.names = FALSE)
+message('simulation completed...')
 
 # theta_vec_null <- result_eta[[1]][,2]
 # (delta <- integrate(function(t) fb(t)*S1(t), l, u)$value)
