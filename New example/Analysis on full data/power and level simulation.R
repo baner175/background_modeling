@@ -15,7 +15,7 @@ fb <- function(t) dtrunc(t, spec = 'norm', a = l, b = u,
 f_mix <- function(t) eta_true*fs(t) + (1-eta_true)*fb(t)
 
 
-eta_seq <- c(0, seq(0.03, 0.09, 0.01))
+eta_seq <- seq(0, 0.09, 0.01)
 theta_vec <- c()
 t_stat_vec <- c()
 seed <- 12345
