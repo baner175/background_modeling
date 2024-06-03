@@ -74,7 +74,7 @@ test_bkg <- data_bkg[-bkg_train_index]
 test <- c(test_sig, test_bkg)
 
 
-hist(obs, probability = TRUE, breaks = 50)
+hs <- hist(obs, probability = TRUE, breaks = 50)
 curve(f_mix, add = TRUE)
 hist(test, probability = TRUE, breaks = 50)
 curve(f_mix, add = TRUE)
@@ -84,7 +84,7 @@ curve(f_mix, add = TRUE)
 # write.csv(data.frame(x = obs), 'full_data.csv', row.names = FALSE)
 # write.csv(data.frame(x = train), 'training_data.csv', row.names = FALSE)
 # write.csv(data.frame(x = test), 'test_data.csv', row.names = FALSE)
-  
 
+  
 
 
