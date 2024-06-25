@@ -6,7 +6,7 @@ rate_back <- 3
 rate_sig <- 1 #or 
 shape_sig <- 0.01
 rate_gb <- 2
-eta <- 0.1
+eta <- 0.25
 
 back <- function(t) dtrunc(t, spec = 'exp', a = l, b = u, rate = rate_back)
 sig <- function(t) dtrunc(t, spec = 'exp', a = l, b = u, rate = rate_sig)
