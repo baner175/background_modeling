@@ -1,0 +1,81 @@
+March 2, 2023:
+library(truncnorm)
+mukhopadhyay paper
+replicate the plots
+
+March 16, 2023:
+Sticking with continuous G
+Keep track of other bases
+3 new papers
+implement AIC and BIC in simulation with and without indicators
+
+March 30, 2023:
+Use the transformed basis on background data
+Use the old basis on mixed data
+Write up the new stuff discussed
+
+April 13, 2023:
+Q: Do I even need the <1, T> orthonormalization when changing the basis?
+Q: Shouldn't we start with an orthonormal (or atleast orthogonal) complete basis?
+Q: If we still stick with the polynomial basis I guess that would be restricting us to continuous pdf's only.
+Q: Mathematical justification while showing u \perp \mB^* \implies <u, S1> = 0.
+
+New theoretical perspective.
+Proving the basis we are working with is the same as starting with orthonormal basis.
+
+MAy 25, 2023:
+
+Tying for more spread out signal, mixture of exponentials may be or beta.
+Try to figure out whether eta estimate is negative or not from the simulations.
+MLE expansion of theta.
+
+June 8, 2023:
+Correcting and adding MISE calculations with delta method.
+Check earlier calculation of bias.
+Check if my method for eta actually gives 0.
+New papers to compare our method.
+
+June 22, 2023:
+
+Correcting code where g_b was not uniform
+Correcting delta method computations
+Seeing how correlations come into MISE
+Find better simulation cases
+
+July 13, 2023:
+
+Ask Sara's code set up
+Delta method gives no closed form expression
+
+Report:
+Break it down even more and give some more background
+The goal is to estimate \eta
+typos
+clearly explain why we need orthogonalization and why we are doing it
+Why MLE?
+Also mention AIC criteria
+Try alabama
+
+July 20, 2023:
+Look into what S.Mukherjee's paper cited for MISE and AIC equivalence (Jeffrey Heart's paper)
+Also look into the classical AIC criteria (https://www.cambridge.org/core/books/model-selection-and-model-averaging/E6F1EC77279D1223423BB64FC3A12C37)
+play with tolerence of integrate
+diachotomous search in optimize(optimize()).
+compute unconstrained minimizer and truncate
+problem with orthonormalizing
+
+Aug 17, 2023:
+Put everything back to [0,1] with transformation inside S1 (check the math)
+Try simulation with new g_b suggested by Sara
+Save the inner products and rewrite the functions
+Read the AIC notes
+Think about misspecified model
+
+Jan 24, 2024:
+Recap
+
+1. Show simulation
+2. The test is unbiased
+3. Is the AIC criteria even sensible here?
+4. Why r < 2/sqrt(n)?
+5. Why not use AIC using log-likelihood?
