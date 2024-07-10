@@ -143,7 +143,7 @@ ggplot(mapping = aes(x = obs)) +
             col = 'cyan',linetype = 4, lwd = 1.2) + 
   geom_line(mapping = aes(x = xs, y = as.numeric(res[2,])), 
             col = 'brown',linetype = 5, lwd = 1.2) + 
-  xlab('log(y)') + ylab('Density') +
+  xlab('y') + ylab('Density') +
   theme_bw() +
   My_Theme
 
