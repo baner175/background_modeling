@@ -213,7 +213,14 @@ legend('topright', col = c('cyan', 'black', 'blue', 'green',
 
 
 
-curve(fb_true, l, u, lwd = 2.5,
+
+set.seed(12344)
+#generating data from true background
+bkg_data <- rtrunc(n, a = l, b = u, spec = 'gamma', rate = bkg_rate, shape = bkg_shape)
+
+hist(bkg_data, probability = TRUE, breaks = 50,
+     main = 'Histogram of background only data', col = 'white')
+curve(fb_true, l, u, lwd = 2.5, add = TRUE,
       col = 'brown', lty = 10, ylab = '')
 curve(gb_test(x, fs_prop = 0), lwd = 2.5, add = TRUE,
       col = 'black', lty = 1)
