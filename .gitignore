@@ -1,5 +1,5 @@
 *.Rhistory
 */.Rhistory
-Plots/*
-Papers/*
+reading material/*
+*.txt
 *.csv
