@@ -192,22 +192,21 @@ curve(gb_test(x, fs_prop = 0.01),
 curve(gb_sf,
       col = 'cyan', lty = 6,
       lwd = 2.5, add = TRUE)
-curve(fs,
-      col = 'skyblue', lty = 9,
-      lwd = 2.5, add = TRUE)
-curve(fb_true,
-      col = 'brown', lty = 10,
-      lwd = 2.5, add = TRUE)
+# curve(fs,
+#       col = 'skyblue', lty = 9,
+#       lwd = 2.5, add = TRUE)
+# curve(fb_true,
+#       col = 'brown', lty = 10,
+#       lwd = 2.5, add = TRUE)
 abline(v = c(M_upper, M_lower), lwd = 2.5, col = 'black')
 
 
 legend('topright', col = c('cyan', 'black', 'blue', 'green',
-                           'red', 'orange', 'brown', 'skyblue'),
+                           'red', 'orange'),
        lty = c(6,1:5,10,9), bty = 'n', lwd =2.5,
        legend=c('safeguard',
                 TeX(sprintf(r'($g_b(\lambda = %f)$)',
-                            c(0, 0.002, 0.005, 0.007, 0.01))),
-                TeX("$f_b$"), TeX("$f_s$")),
+                            c(0, 0.002, 0.005, 0.007, 0.01)))),
        cex = 1,
        y.intersp = 1)
 
@@ -219,7 +218,7 @@ set.seed(12344)
 bkg_data <- rtrunc(n, a = l, b = u, spec = 'gamma', rate = bkg_rate, shape = bkg_shape)
 
 hist(bkg_data, probability = TRUE, breaks = 50,
-     main = 'Histogram of background only data', col = 'white')
+     main = '', col = 'white', xlab = 'x')
 curve(fb_true, l, u, lwd = 2.5, add = TRUE,
       col = 'brown', lty = 10, ylab = '')
 curve(gb_test(x, fs_prop = 0), lwd = 2.5, add = TRUE,
