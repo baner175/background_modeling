@@ -63,7 +63,7 @@ qb_likelihood <- function(pars)
   return(-sum(log(fi)))
 }
 
-(sf_res <- nlminb(start = 0.01,
+(res <- nlminb(start = 0.01,
                   objective = qb_likelihood,
                   lower = 0.005, upper = 0.3)$par)
 
