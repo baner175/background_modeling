@@ -169,13 +169,14 @@ for(j in 1:length(lambda_seq))
         lty = my_lty[j])
 }
 
-legend('topright', col = c('black', mycols),
-       lty = c(1, 2, my_lty), bty = 'n', lwd =2.2,
-       legend=c('KDE',
-                TeX(sprintf(r'($\lambda = %f (\hat{\eta}_{(b)}: %f , p.val_{(b)} : %f)$)', lambda_seq,
+legend('topright', col = mycols,
+       lty = my_lty, bty = 'n', lwd =2.2,
+       legend=c(TeX(sprintf(r'($\lambda = %f (\hat{\eta}_{(b)}: %f , p.val_{(b)} : %f)$)', lambda_seq,
                             round(as.numeric(res_sig_search[,2]), 4),
                             round(as.numeric(res_sig_search[,3]), 4)))),
        cex = 1,
        y.intersp = 1)
 
 title(main = 'VBF - Cat 0')
+
+knitr::kable(res_sig_search[-1,], 'pipe')

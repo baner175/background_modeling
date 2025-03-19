@@ -41,7 +41,7 @@ round(integrate(fs, M_lower, M_upper)$value,5) == 1-eps
 
 # DEFINING q_b AND g_b
 
-# generating psseudo unbinned data
+# generating pseudo unbinned data
 set.seed(123456)
 obs <- c()
 for(i in 1:(length(bins))-1)
@@ -49,26 +49,23 @@ for(i in 1:(length(bins))-1)
   obs <- c(obs, runif(ni[i], bins[i], bins[i+1]))
 }
 
-# safeguard likelihood
-safeguard_likelihood <- function(pars)
+# likelihood using pseudo-unbinned data
+qb_likelihood <- function(pars)
 {
-  rate <- pars[1]; eps <- pars[2]
+  rate <- pars
   
   fi <- sapply(obs, function(t)
   {
-    eps*dtrunc(t, mean = mean_sig, sd = sd_sig,
-               spec = 'norm',
-               a = l, b = u) + 
-      (1-eps)*dtrunc(t, rate = rate,
+    dtrunc(t, rate = rate,
                            spec = 'exp',
                            a = l, b = u)
   })
   return(-sum(log(fi)))
 }
 
-(sf_res <- nlminb(start = c(0.01, 0.5),
-                  objective = safeguard_likelihood,
-                  lower = c(0.005,0), upper = c(0.3, 1))$par)
+(res <- nlminb(start = 0.01,
+               objective = qb_likelihood,
+               lower = 0.005, upper = 0.3)$par)
 
 qb_rate <- 0.041
 
@@ -199,4 +196,4 @@ legend('bottomleft', col = mycols,
 
 title(main = 'VBF - Cat 0')
 
-res_sig_search
+knitr::kable(res_sig_search[-1,], 'pipe')

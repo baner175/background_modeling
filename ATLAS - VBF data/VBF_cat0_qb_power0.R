@@ -50,25 +50,22 @@ for(i in 1:(length(bins))-1)
 }
 
 # safeguard likelihood
-safeguard_likelihood <- function(pars)
+qb_likelihood <- function(pars)
 {
-  shape <- pars[1]; eps <- pars[2]
+  shape <- pars
   
   fi <- sapply(obs, function(t)
   {
-    eps*dtrunc(t, mean = mean_sig, sd = sd_sig,
-               spec = 'norm',
-               a = l, b = u) + 
-      (1-eps)*dtrunc(t, shape = shape, scale = l,
-                     spec = 'pareto',
-                     a = l, b = u)
+    dtrunc(t, shape = shape, scale = l,
+           spec = 'pareto',
+           a = l, b = u)
   })
   return(-sum(log(fi)))
 }
 
-(sf_res <- nlminb(start = c(0.01, 0.5),
-                  objective = safeguard_likelihood,
-                  lower = c(0.005,0), upper = c(10, 1))$par)
+(res <- nlminb(start = 0.01,
+                  objective = qb_likelihood,
+                  lower = 0.005, upper = 10)$par)
 
 qb_shape <- 4.36
 
@@ -199,4 +196,4 @@ legend('bottomleft', col = mycols,
 
 title(main = 'VBF - Cat 0')
 
-res_sig_search
+knitr::kable(res_sig_search[-1,], 'pipe')
