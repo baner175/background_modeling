@@ -67,7 +67,7 @@ qb_likelihood <- function(pars)
                   objective = qb_likelihood,
                   lower = 0.005, upper = 10)$par)
 
-qb_shape <- 3.78
+qb_shape <- 3.36
 
 # PROPOSAL BACKGROUND DENSITY:
 mean1_in_gb <- (M_lower + mean_sig)/2; sd_in_gb <- 2*sd_sig
