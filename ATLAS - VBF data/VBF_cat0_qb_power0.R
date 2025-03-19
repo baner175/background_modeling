@@ -41,7 +41,7 @@ round(integrate(fs, M_lower, M_upper)$value,5) == 1-eps
 
 # DEFINING q_b AND g_b
 
-# generating psseudo unbinned data
+# generating pseudo unbinned data
 set.seed(123456)
 obs <- c()
 for(i in 1:(length(bins))-1)
@@ -49,7 +49,7 @@ for(i in 1:(length(bins))-1)
   obs <- c(obs, runif(ni[i], bins[i], bins[i+1]))
 }
 
-# safeguard likelihood
+# likelihood using pseudo-unbinned data
 qb_likelihood <- function(pars)
 {
   shape <- pars
