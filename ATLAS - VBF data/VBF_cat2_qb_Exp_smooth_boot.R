@@ -4,6 +4,9 @@ library(kdensity)
 library(truncdist)
 library(VGAM)
 library(latex2exp)
+library(Hmisc)
+
+source('necessary_functions.R')
 
 mean_sig <- 125; sd_sig <- 3
 eps <- 1e-3
@@ -15,6 +18,14 @@ N <- sum(ni)
 k <- nrow(dat)
 bins <- seq(l, u, length.out = k+1)
 xi <- (bins[1:k] + bins[2:(k+1)])/2
+
+# generating pseudo unbinned data
+set.seed(123456)
+obs <- c()
+for(i in 1:(length(bins))-1)
+{
+  obs <- c(obs, runif(ni[i], bins[i], bins[i+1]))
+}
 
 # Defining signal density and calculating signal region
 
@@ -38,18 +49,25 @@ r <- sol$root
 
 round(integrate(fs, M_lower, M_upper)$value,5) == 1-eps
 
-
-# Defining q_b and g_b
-
-bkg_loc <- 91.2
-bkg_scale <- 2.49/2
-
-qb <- function(x)
+# likelihood using pseudo-unbinned data
+qb_likelihood <- function(pars)
 {
-  dtrunc(x, a = l, b= u, spec = 'cauchy', 
-         location = bkg_loc, 
-         scale = bkg_scale)
+  rate <- pars
+  
+  fi <- sapply(obs, function(t)
+  {
+    dtrunc(t, rate = rate,
+           spec = 'exp',
+           a = l, b = u)
+  })
+  return(-sum(log(fi)))
 }
+
+(res <- nlminb(start = 0.01,
+               objective = qb_likelihood,
+               lower = 0.005, upper = 0.3)$par)
+
+qb_rate <- 0.037
 
 # PROPOSAL BACKGROUND DENSITY:
 mean1_in_gb <- (M_lower + mean_sig)/2; sd_in_gb <- 2*sd_sig
@@ -61,9 +79,8 @@ gb_test <- function(x, fs_prop = 0)
                     spec = 'norm', a = l, b = u)
   fs_val2 <-  dtrunc(x, mean = mean2_in_gb, sd = sd_in_gb,
                      spec = 'norm', a = l, b = u)
-  qb_val <- dtrunc(x, a = l, b= u, spec = 'cauchy', 
-                   location = bkg_loc, 
-                   scale = bkg_scale)
+  qb_val <- dtrunc(x, a = l, b= u, spec = 'exp', 
+                   rate = qb_rate) # change qb here
   return(fs_prop*fs_val1 + fs_prop*fs_val2 + (1-2*fs_prop)*qb_val)
 }
 
@@ -88,17 +105,81 @@ curve(N*fs(x)*(u-l)/(k+1),
 abline(v = c(M_lower, M_upper), col = 'black', lwd = 2)
 
 (N_mid <- sum(ni[xi<=130 & xi>=120]))
+n_basis <- 2
 
-search_signal <- function(lambda)
+search_signal <- function(lambda, boot = 1e5, seed = 12345)
 {
-  norm_S <- integrate(function(t) {((fs(t)/gb_test(t, fs_prop = lambda) - 1)^2)*gb_test(t, fs_prop = lambda)}, l, u)$value |> sqrt()
+  gb <- function(x) gb_test(x, fs_prop = lambda)
+  Gb <- function(x, ...)
+  {
+    integrate(function(t) gb(t, ...), l, x)$value
+  }
   
-  # Testing using the binned data:
+  Gb <- Vectorize(Gb)
+  norm_S <- integrate(function(t) {((fs(t)/gb(t) - 1)^2)*gb(t)}, l, u)$value |> sqrt()
+  
+  basis <- construct_basis(n_basis = n_basis,
+                           sig_density = fs,
+                           proposal_bkg = gb,
+                           limits = c(l,u))
+  S1 <- basis[[2]]
+  T_basis <- basis[-c(1,2)]
+  tau <- sapply(T_basis, function(f) sapply(obs, f) |> mean())
+  fm_null <- function(x)
+  {
+    T_vec <- sapply(T_basis, function(f) f(x))
+    return(gb(x)*(1 + crossprod(tau, T_vec)[1,1]))
+  }  
+  fm_null <- Vectorize(fm_null)
+  t_stat_boot <- c()
+  
+  ## calculating test statistic using 
   S1_vec <- sapply(xi, function(x) {
     f_sig <- fs(x)
     g_b <- gb_test(x, fs_prop = lambda)
     return((f_sig/g_b -1)/norm_S)
   })
+  
+  # bootstrapping
+  set.seed(seed)
+  
+  u_obs <- Gb(obs)
+  extrap <- approxExtrap(obs, fm_null(obs)/gb(obs), xout = c(l, obs, u))
+  dG_GF <- approxfun(extrap$x,extrap$y, rule=2) # d(Gb(x),; Gb, Fm_hat)
+  extrap <- approxExtrap(u_obs, fm_null(obs)/gb(obs), xout = c(0, u_obs, 1))
+  du_GF <- approxfun(extrap$x,extrap$y, rule=2)
+  M <- max(sapply(u_obs, du_GF))
+  n_sim <- round(1.5*N*M)
+  fs_prop <- lambda
+  
+  for(b in 1:boot)
+  {
+    ## sampling from Gb
+    xFs1 <- rtrunc(n_sim, spec = 'norm', a = l, b = u,
+                   mean = mean1_in_gb, sd = sd_in_gb)
+    xFs2 <- rtrunc(n_sim, spec = 'norm', a = l, b = u,
+                   mean = mean2_in_gb, sd = sd_in_gb)
+    vG_sim1 <- runif(n_sim)
+    xG_bump <- ifelse(vG_sim1<0.5, xFs1, xFs2)
+    xQ <- rtrunc(n_sim, a = l, b= u, spec = 'exp', 
+                 rate = qb_rate) # change qb here
+    vG_sim2 <- runif(n_sim)
+    xG <- ifelse(vG_sim2<1-2*fs_prop, xQ, xG_bump) # sample from Gb
+    
+    ## sampling from fm_null
+    dG_GF.xG <- sapply(xG, dG_GF)
+    v_sim <- runif(n_sim)
+    xF <- xG[v_sim*M<dG_GF.xG]
+    xF <- xF[1:N]
+    ni_boot <- hist(xF, breaks = bins, plot = FALSE)$count
+    
+    theta_check_boot <- mean(S1_vec*ni_boot)
+    
+    t_stat_boot[b] <- k*theta_check_boot/sqrt(sum(ni_boot*S1_vec^2))
+    cat((sprintf('\rLambda: %f; Iteration: %d/%d', lambda, b, boot)))
+  }
+  
+  
   theta_hat_binned <- sum(S1_vec*ni)/N
   
   # estimating eta:
@@ -107,32 +188,12 @@ search_signal <- function(lambda)
   # testing for signal:
   theta_check <- mean(S1_vec*ni)
   t_stat_theta <- k*theta_check/sqrt(sum(ni*S1_vec^2))
-  p_val_binned <- pnorm(t_stat_theta, lower.tail = FALSE)
+  
+  p_val_boot <- mean(t_stat_boot>t_stat_theta)
   S_hat <- N_mid*eta_hat_binned
   B_hat <- N_mid*(1-eta_hat_binned)
   signif <- S_hat/sqrt(B_hat)
-  # 
-  # 
-  # # Testing using the pseudo-ubinned data:
-  # S1_vec <- sapply(obs_unbinned, function(x) {
-  #   f_sig <- fs(x)
-  #   g_b <- gb_test(x, fs_prop = lambda)
-  #   return((f_sig/g_b -1)/norm_S)
-  # })
-  # theta_hat_unbinned <- mean(S1_vec)
-  # se_theta <- sqrt((mean(S1_vec^2) - theta_hat_unbinned^2)/N)
-  # 
-  # # testing \eta = 0:
-  # eta_hat_unbinned <- theta_hat_unbinned/norm_S
-  # 
-  # # testing for signal:
-  # t_stat_theta <- theta_hat_unbinned/se_theta
-  # p_val_unbinned <- pnorm(t_stat_theta, lower.tail = FALSE)
-  # 
-  # return(c(eta_hat_binned, p_val_binned,
-  # eta_hat_unbinned, p_val_unbinned))
-  
-  return(c(eta_hat_binned, p_val_binned, round(S_hat, 2), round(signif, 3)))
+  return(c(eta_hat_binned, p_val_boot, round(S_hat, 2), round(signif, 3)))
 }
 
 lambda_max <- 0.05
@@ -141,9 +202,11 @@ res_sig_search <- sapply(lambda_seq, search_signal)
 res_sig_search <- cbind(lambda_seq, t(res_sig_search))
 res_sig_search <- data.frame(res_sig_search)
 colnames(res_sig_search) <- c('lambda',
-                              'eta_hat_binned', 'p-value_binned',
+                              'eta_hat_binned', 'smooth booted p-value',
                               'S','significance')
 res_sig_search
+
+options(digits = 5)
 
 picture_l <- M_lower - 3; picture_u <- M_upper + 3
 plot(xi, ni, pch = 16,
@@ -169,11 +232,10 @@ for(j in 1:length(lambda_seq))
         lty = my_lty[j])
 }
 
-legend('bottomleft', col = mycols,
+legend('bottomleft', col =  mycols,
        lty = my_lty, bty = 'n', lwd =2.2,
-       legend=c(TeX(sprintf(r'($\lambda = %f (\hat{\eta}_{(b)}: %f , p.val_{(b)} : %f)$)', lambda_seq,
-                            round(as.numeric(res_sig_search[,2]), 4),
-                            round(as.numeric(res_sig_search[,3]), 4)))),
+       legend=c(TeX(sprintf(r'($\lambda = %f (\hat{\eta}_{(b)}: %f)$)', lambda_seq,
+                            round(as.numeric(res_sig_search[,2]), 4)))),
        cex = 1,
        y.intersp = 1)
 
