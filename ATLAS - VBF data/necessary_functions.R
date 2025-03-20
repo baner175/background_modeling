@@ -1,87 +1,8 @@
-rm(list = ls())
-library(ggplot2)
-library(kdensity)
-library(truncdist)
-library(VGAM)
-library(latex2exp)
-library(Hmisc)
-
-options(digits = 22)
-
-mean_sig <- 125; sd_sig <- 3
-eps <- 1e-3
-u <- 160; l <- 110
-
-# DEFINING SIGNAL DENSITY AND CALCULATING SIGNAL REGION
-
-fs <- function(x) dtrunc(x, spec = 'norm', a = l, b = u, mean = mean_sig, sd = sd_sig)
-Fs <- function(x) ptrunc(x, spec = 'norm', a = l, b = u, mean = mean_sig, sd = sd_sig)
-
-# FIGURING OUT (mu_s -d, mu_s + d):
-find_d <- function(d)
-{
-  pl <- Fs(mean_sig-d)
-  pu <- Fs(mean_sig+d)
-  return(pu-pl-1+eps)
-}
-
-sol <- uniroot(find_d, lower = 0, upper = min(mean_sig - l,u - mean_sig))
-
-r <- sol$root
-
-(M_lower <- mean_sig - r)
-(M_upper <- mean_sig + r)
-
-round(integrate(fs, M_lower, M_upper)$value,5) == 1-eps
-
-
-# defining gb:
-bkg_loc <- 91.2
-bkg_scale <- 2.49/2
-
-qb <- function(x)
-{
-  dtrunc(x, a = l, b= u, spec = 'cauchy', 
-         location = bkg_loc, 
-         scale = bkg_scale)
-}
-
-# PROPOSAL BACKGROUND DENSITY:
-mean1_in_gb <- (M_lower + mean_sig)/2; sd_in_gb <- 2*sd_sig
-mean2_in_gb <- (M_upper + mean_sig)/2;
-
-gb_test <- function(x, fs_prop = 0)
-{
-  fs_val1 <- dtrunc(x, mean = mean1_in_gb, sd = sd_in_gb,
-                    spec = 'norm', a = l, b = u)
-  fs_val2 <-  dtrunc(x, mean = mean2_in_gb, sd = sd_in_gb,
-                     spec = 'norm', a = l, b = u)
-  qb_val <- dtrunc(x, a = l, b= u, spec = 'cauchy', 
-                   location = bkg_loc, 
-                   scale = bkg_scale)
-  return(fs_prop*fs_val1 + fs_prop*fs_val2 + (1-2*fs_prop)*qb_val)
-}
-
-gb <- function(x) gb_test(x, fs_prop = 0.05)
-gb <- Vectorize(gb)
-
-
 inner_prod <- function(f1, f2, limits = c(l,u))
 {
   l <- limits[1]; u <- limits[2]
   return(integrate(function(t) f1(t)*f2(t), l, u)$value)
 }
-
-# Convarting fs into S1:
-norm_S <- inner_prod(function(t) (fs(t)/gb(t)-1)^2, gb, c(l,u)) |> sqrt()
-
-S1 <- function(x)
-{
-  f_sig <- fs(x)
-  g_b <- gb(x)
-  return((f_sig/g_b -1)/norm_S)
-}
-
 
 construct_basis <- function(n_basis  = 2, 
                             sig_density,
