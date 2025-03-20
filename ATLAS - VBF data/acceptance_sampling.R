@@ -44,7 +44,7 @@ round(integrate(fs, M_lower, M_upper)$value,5) == 1-eps
 
 # DEFINING q_b AND g_b
 
-# generating psseudo unbinned data
+# generating pseudo unbinned data
 set.seed(123456)
 obs <- c()
 for(i in 1:(length(bins))-1)
@@ -166,7 +166,7 @@ curve(S1, l, u, lwd = 2, col = 'skyblue', ylim = c(-1,3))
 curve(T1_normed, l, u, lwd = 2, col = 'red', add = TRUE)
 curve(T2_normed, l, u, lwd = 2, col = 'blue', add = TRUE)
 curve(T3_normed, l, u, lwd = 2, col = 'green', add = TRUE)
-curve(T4_normed, l, u, lwd = 2, col = 'orange', add = TRUE)
+# curve(T4_normed, l, u, lwd = 2, col = 'orange', add = TRUE)
 
 T_basis <- c(T1_normed, T2_normed, T3_normed)
 
@@ -176,8 +176,11 @@ tau <- sapply(T_basis, function(f) sapply(obs, f) |> mean())
 # fm_null <- function(x) gb(x)*(1 + tau[1]*T1_normed(x) + tau[2]*T2_normed(x) +
 #                                 tau[3]*T3_normed(x) + tau[4]*T4_normed(x))
 
-fm_null <- function(x) gb(x)*(1 + tau[1]*T1_normed(x) + tau[2]*T2_normed(x) +
-                                tau[3]*T3_normed(x))
+fm_null <- function(x)
+{
+  T_vec <- sapply(T_basis, function(f) f(x))
+  return(gb(x)*(1 + crossprod(tau, T_vec)[1,1]))
+}
 
 fm_null <- Vectorize(fm_null)
 
