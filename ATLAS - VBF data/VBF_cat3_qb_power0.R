@@ -194,6 +194,4 @@ legend('bottomleft', col = mycols,
        cex = 1,
        y.intersp = 1)
 
-title(main = 'VBF - Cat 3')
-
-knitr::kable(res_sig_search[-1,], 'pipe')
+knitr::kable(res_sig_search, 'pipe')
