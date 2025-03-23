@@ -1,3 +1,21 @@
+find_signal_region <- function(signal_CDF, signal_location, signal_mass)
+{
+  Fs <- signal_CDF
+  find_d <- function(d)
+  {
+    pl <- Fs(signal_location-d)
+    pu <- Fs(signal_location+d)
+    return(pu-pl-signal_mass)
+  }
+  
+  sol <- uniroot(find_d, lower = 0, upper = min(signal_location - l,
+                                                u - signal_location))
+  
+  r <- sol$root
+  
+  return(signal_location +c(-1,1)* r)
+}
+
 inner_prod <- function(f1, f2, limits = c(l,u))
 {
   l <- limits[1]; u <- limits[2]
