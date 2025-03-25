@@ -1,3 +1,15 @@
+generate_unbinned_data <- function(bin_counts, bin_ends, seed = NULL)
+{
+  set.seed(seed)
+  bins <- bin_ends; ni <- bin_counts
+  obs <- c()
+  for(i in 1:(length(bins))-1)
+  {
+    obs <- c(obs, runif(ni[i], bins[i], bins[i+1]))
+  }
+  return(obs)
+}
+
 find_signal_region <- function(signal_CDF, signal_location, signal_mass)
 {
   Fs <- signal_CDF
