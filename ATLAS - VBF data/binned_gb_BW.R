@@ -42,7 +42,7 @@ mean1_in_gb <- (M_lower + mean_sig)/2; sd_in_gb <- 2*sd_sig
 mean2_in_gb <- (M_upper + mean_sig)/2;
 
 lambda_max <- 0.005 # change lambda_max here
-lambda_seq <- seq(0, lambda_max, length.out = 4)
+lambda_seq <- seq(0, lambda_max, length.out = 5)
 res_sig_search <- binned_signal_search(lambda = lambda_seq,
                                        fs = fs, qb = qb,
                                        mu1 = mean1_in_gb, mu2 = mean2_in_gb, sd = sd_in_gb,
@@ -61,9 +61,9 @@ plot(xi, ni, pch = 16,
      ylab="Events",xlab="Energy (Gev)",
      col = alpha('black', alpha = 0.3),
      xlim = c(picture_l, picture_u))
-mycols <- c('red', 'green', 'orange', 'purple')
+mycols <- c('brown', 'skyblue' ,'red', 'orange', 'purple')
 palette(mycols)
-my_lty = c(3,4,5,6)
+my_lty = 2:6
 
 for(j in 1:length(lambda_seq))
 {
