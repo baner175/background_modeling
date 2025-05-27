@@ -3,3 +3,8 @@
 reading material/*
 *.txt
 *.csv
+*.RData
+*.sh
+*.sh~
+temp_*.R
+*.log
