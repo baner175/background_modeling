@@ -48,7 +48,7 @@ mean(df$test_stat>qnorm(0.05, lower.tail = FALSE))
 
 
 # LRT simulation:
-B <- 1e4; n_samp <- 5e2; eta_true <- 0
+B <- 1e4; n_samp <- 1e3; eta_true <- 0
 file_name <- paste0('Results/LRT', 
                     '_B_', B, 
                     '_n_samp_', n_samp,
@@ -59,11 +59,13 @@ df <- read.csv(file_name, header = TRUE)
 if(eta_true == 0){
   Fn_star <- ecdf(df[,1])
   Fn_0 <- ecdf(df[,2])
-  theo_CDF <- function(x) (0.5 + 0.5*pchisq(x, df = 1))*(x>=0)
-  curve(theo_CDF, from = 0, to = 20, ylab = '',
+  theo_CDF_0 <- function(x) (0.5 + 0.5*pchisq(x, df = 1))*(x>=0)
+  theo_CDF_1 <- function(x) pchisq(x, df = 1)
+  curve(theo_CDF_0, from = 0, to = 20, ylab = '',
         lwd = 2, lty = 1, col = 'black')
   curve(Fn_0, add = TRUE, lty = 2, col = 'red')
   curve(Fn_star, add = TRUE, lwd = 2, lty = 3, col = 'blue')
+  curve(theo_CDF_1, add = TRUE, lwd = 2, lty = 3, col = 'brown')
   legend('bottomright', 
          legend = c(TeX('$\\frac{1}{2}\\delta_0 + \\frac{1}{2}\\chi^2_1$'),
                     TeX('Emp. CDF of $-2 log(\\lambda(0))$'),
@@ -79,7 +81,7 @@ if(eta_true == 0){
         lwd = 2, lty = 1, col = 'black')
   curve(Fn_star, add = TRUE, lty = 2, col = 'red')
   legend('bottomright', 
-         legend = c(TeX('$\\frac{1}{2}\\delta_0 + \\frac{1}{2}\\chi^2_1$'),
+         legend = c(TeX('$\\chi^2_1$'),
                     TeX('Emp. CDF of $-2 log(\\lambda(\\tilde{\\eta_*}))$')),
          col = c('black', 'red'), lty = c(1,2),
          lwd = 2,
