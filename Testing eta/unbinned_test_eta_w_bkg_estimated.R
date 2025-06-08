@@ -65,9 +65,10 @@ d_S2 <- function(x, beta){
   return(((nrm_S^2)*d_S - S_val*d_normS2)/(nrm_S^4))
 }
 
-
+bkg_to_phys_ratio <- 2
 B <- 1e4
-n_samp <- 5e2
+n_phys <- 5e3
+n_bkg <- n_phys*bkg_to_phys_ratio
 set.seed(12345)
 seeds <- sample.int(.Machine$integer.max, B)
 
@@ -84,15 +85,15 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
   {
     set.seed(seeds[i])
     # bkg-only sample:
-    bkg_samp <- rtrunc(n_samp, a = l, b = u, spec = 'gamma',
+    bkg_samp <- rtrunc(n_bkg, a = l, b = u, spec = 'gamma',
                        rate = bkg_rate, shape = bkg_shape)
     
     # physics-sample:
-    s_samp <- rtrunc(n_samp, a = l, b = u, spec = 'norm',
+    s_samp <- rtrunc(n_phys, a = l, b = u, spec = 'norm',
                      mean = mean_sig, sd = sd_sig)
-    b_samp <- rtrunc(n_samp, a = l, b = u, spec = 'gamma',
+    b_samp <- rtrunc(n_phys, a = l, b = u, spec = 'gamma',
                      rate = bkg_rate, shape = bkg_shape)
-    u_mask <- runif(n_samp)
+    u_mask <- runif(n_phys)
     phys_samp <- ifelse(u_mask <= eta_true, s_samp, b_samp)
     
     opt <- tryCatch(
@@ -115,31 +116,36 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
     delta_0_hat <- mean(S2_bkg_vec)
     J1_hat <- -d2_log_gb(beta_hat)
     V1_hat <- sapply(bkg_samp,
-                     function(x) d_log_gb(beta = beta_hat, x)^2) |> mean() - 
-      (sapply(bkg_samp,
-              function(x) d_log_gb(beta = beta_hat, x)) |> mean())^2
+                     function(x) d_log_gb(beta = beta_hat, x)^2) |> mean()
     
     eta_hat <- (theta_0_hat - delta_0_hat)/(1-delta_0_hat)
     
     d_theta_hat <- sapply(phys_samp, function(x) d_S2(x, beta = beta_hat)) |> mean()
     d_delta_hat <- sapply(bkg_samp, function(x) d_S2(x, beta = beta_hat)) |> mean()
     
-    sigma_eta_hat <- sqrt(
-      (1/(1-delta_0_hat)^2) * (mean(S2_phys_vec^2) - theta_0_hat^2) + 
-        ((theta_0_hat - 1)^2/(1-delta_0_hat)^4) * (mean(S2_bkg_vec^2) - delta_0_hat^2) + 
-        V1_hat/(J1_hat^2) * (d_theta_hat/(1-delta_0_hat) + ((theta_0_hat-1)/((1-delta_0_hat)^2))*d_delta_hat)^2 + 
-        2 * (theta_0_hat-1)/(1-delta_0_hat)^2 * (d_theta_hat/(1-delta_0_hat) + ((theta_0_hat-1)/((1-delta_0_hat)^2))*d_delta_hat) * 1/J1_hat * 
+    test_num <- sqrt(n_phys*n_bkg)*(eta_hat - eta_true)
+    test_denom <- sqrt(
+      (n_bkg/(1-delta_0_hat)^2) * (mean(S2_phys_vec^2) - theta_0_hat^2) +
+        n_phys*((theta_0_hat - 1)^2/(1-delta_0_hat)^4) * (mean(S2_bkg_vec^2) - delta_0_hat^2) + 
+        n_phys*V1_hat/(J1_hat^2) * (d_theta_hat/(1-delta_0_hat) + ((theta_0_hat-1)/((1-delta_0_hat)^2))*d_delta_hat)^2 + 
+        2 * (n_phys/J1_hat) * (theta_0_hat-1)/((1-delta_0_hat)^2) * 
+        (d_theta_hat/(1-delta_0_hat) + ((theta_0_hat-1)/((1-delta_0_hat)^2))*d_delta_hat) * 
         sapply(bkg_samp, function(x) S2(x, beta = beta_hat)*d_log_gb(beta_hat, x)) |> mean()
     )
     
-    sqrt(n_samp)*(eta_hat - eta_true)/sigma_eta_hat
+    test_num/test_denom
   }
 close(pb)
 
-Sys.time() - start_time # took about 5.6 hours
+Sys.time() - start_time
 stopCluster(cl)
 
-file_name <- paste0('Results/beta_estimated_B_',B,'_n_samp_',n_samp,'_eta_',eta_true,'.csv')
+file_name <- paste0('Results/unbinned_test_eta_w_bkg__',
+                    'beta_estimated',
+                    'B(',B,')_',
+                    'n_phys(',n_phys,')_',
+                    'bkg_to_phys(',bkg_to_phys_ratio,')_',
+                    'eta(',eta_true,')','.csv')
 
 write.csv(data.frame(test_stat = test_stat_eta),
           file_name, row.names = FALSE)

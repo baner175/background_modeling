@@ -39,8 +39,10 @@ norm_S <- function(beta = beta0) integrate(function(x) (S(x, beta)^2)*gb(x,beta)
                                    l, u)$value |> sqrt()
 S2 <- function(x, beta = beta0) (fs(x)/gb(x, beta) - 1)/norm_S(beta)^2
 
+bkg_to_phys_ratio <- 2
 B <- 1e4
-n_samp <- 5e2
+n_phys <- 5e3
+n_bkg <- n_phys*bkg_to_phys_ratio
 set.seed(12345)
 seeds <- sample.int(.Machine$integer.max, B)
 
@@ -57,15 +59,15 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
   {
     set.seed(seeds[i])
     # bkg-only sample:
-    bkg_samp <- rtrunc(n_samp, a = l, b = u, spec = 'gamma',
+    bkg_samp <- rtrunc(n_bkg, a = l, b = u, spec = 'gamma',
                        rate = bkg_rate, shape = bkg_shape)
     
     # physics-sample:
-    s_samp <- rtrunc(n_samp, a = l, b = u, spec = 'norm',
+    s_samp <- rtrunc(n_phys, a = l, b = u, spec = 'norm',
                      mean = mean_sig, sd = sd_sig)
-    b_samp <- rtrunc(n_samp, a = l, b = u, spec = 'gamma',
+    b_samp <- rtrunc(n_phys, a = l, b = u, spec = 'gamma',
                      rate = bkg_rate, shape = bkg_shape)
-    u_mask <- runif(n_samp)
+    u_mask <- runif(n_phys)
     phys_samp <- ifelse(u_mask <= eta_true, s_samp, b_samp)
     
     
@@ -76,22 +78,28 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
     theta_0_hat <- mean(S2_phys_vec)
     delta_0_hat <- mean(S2_bkg_vec)
     
-    var_F_S <- mean(S2_phys_vec^2) - theta_0_hat^2
-    var_Fb_S <- mean(S2_bkg_vec^2) - delta_0_hat^2
+    sig_theta0_hat_sq <- mean(S2_phys_vec^2) - theta_0_hat^2
+    sig_delta0_hat_sq <- mean(S2_bkg_vec^2) - delta_0_hat^2
     
     eta_hat <- (theta_0_hat - delta_0_hat)/(1-delta_0_hat)
-    sigma_eta_hat <- sqrt(
-      (var_F_S*(1-delta_0_hat)^2 + var_Fb_S*(1-theta_0_hat)^2)/(1-delta_0_hat)^4
-    )
     
-    sqrt(n_samp)*(eta_hat-eta_true)/sigma_eta_hat
+    test_num <- sqrt(n_phys*n_bkg)*(eta_hat - eta_true)
+    test_denom <- sqrt(
+      n_bkg*sig_theta0_hat_sq/(1- delta_0_hat^2) + 
+        n_phys*sig_delta0_hat_sq*((theta_0_hat-1)^2)/((1-delta_0_hat)^4)
+    )
+    test_num/test_denom
   }
 close(pb)
 
 Sys.time() - start_time
 stopCluster(cl)
 
-file_name <- paste0('Results/beta_',beta0,'_known','_B_',B,'_n_samp_',n_samp,'_eta_',eta_true,'.csv')
+file_name <- paste0('Results/unbinned_test_eta_w_bkg__',
+'beta_known(',beta0,')_',
+'B(',B,')_',
+'n_phys(',n_phys,')_',
+'bkg_to_phys(',bkg_to_phys_ratio,')_','eta(',eta_true,')','.csv')
 
 write.csv(data.frame(test_stat = test_stat_eta),
           file_name, row.names = FALSE)
