@@ -141,7 +141,7 @@ Sys.time() - start_time
 stopCluster(cl)
 
 file_name <- paste0('Results/unbinned_test_eta_w_bkg__',
-                    'beta_estimated',
+                    'beta_estimated_',
                     'B(',B,')_',
                     'n_phys(',n_phys,')_',
                     'bkg_to_phys(',bkg_to_phys_ratio,')_',

@@ -5,7 +5,7 @@ library(latex2exp)
 # WITH BKG ONLY SAMPLE ##########################################
 
 # UNBINNED; beta estimated:
-B <- 1e4; n_phys <- 5e2
+B <- 1e4; n_phys <- 5e3
 bkg_to_phys_ratio <- 2; eta_true <- 0
 
 file_name <- paste0('Results/unbinned_test_eta_w_bkg__',
@@ -16,7 +16,7 @@ file_name <- paste0('Results/unbinned_test_eta_w_bkg__',
                     'eta(',eta_true,')','.csv')
 
 # UNBINNED; beta known:
-beta0 <- 3.87; B <- 1e4; n_phys <- 5e2
+beta0 <- 3.87; B <- 1e4; n_phys <- 5e3
 bkg_to_phys_ratio <- 2; eta_true <- 0
 
 file_name <- paste0('Results/unbinned_test_eta_w_bkg__',
