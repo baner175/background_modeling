@@ -8,3 +8,4 @@ reading material/*
 *.sh~
 temp_*.R
 *.log
+*.sh#
