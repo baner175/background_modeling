@@ -31,19 +31,6 @@ eta_true <- as.numeric(opt$eta); B <- as.numeric(opt$N_iter)
 n_samp <- as.numeric(opt$n_samp); lambda0 <- as.numeric(opt$lambda)
 eps <- as.numeric(opt$eps)
 
-# rm(list = ls())
-# 
-# library(truncdist)
-# library(VGAM)
-# library(doSNOW)
-# library(parallel)
-# library(foreach)
-# library(optparse)
-# l <- 1; u <- 2
-# 
-# eta_true <- 0; B <- 5e2
-# n_samp <- 1e3; eps <- 1e-3; lambda0 <- 0.01
-
 #parameters for the signal
 mean_sig <- 1.28
 sd_sig <- 0.02
