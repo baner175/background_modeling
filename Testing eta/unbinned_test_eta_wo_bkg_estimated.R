@@ -192,5 +192,5 @@ file_name <- paste0('/home/baner175/Desktop/background_modeling/Testing eta/',
                     'lambda(',lambda0,')_',
                     'eta(',eta_true,')','.csv')
 
-write.csv(data.frame(test_stat = test_stat_eta),
+write.csv(data.frame(test_stat = test_stat),
           file_name, row.names = FALSE)
