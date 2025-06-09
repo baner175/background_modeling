@@ -197,10 +197,6 @@ close(pb)
 Sys.time() - start_time
 stopCluster(cl)
 
-png("plot_output.png")
-hist(test_stat, probability = TRUE, breaks = 30)
-curve(dnorm, lwd = 2, add = TRUE)
-
 file_name <- paste0('/home/baner175/Desktop/background_modeling/Testing eta/',
                     'Results/unbinned_test_eta_wo_bkg__',
                     'beta_estimated_',
