@@ -7,9 +7,6 @@ library(parallel)
 library(foreach)
 library(optparse)
 l <- 1; u <- 2
-################################################################
-################ SIGNAL AND SIGNAL REGION ######################
-################################################################
 
 option_list <- list(
   make_option(c("-e", "--eta"), type = "double", default = 0,
@@ -30,6 +27,7 @@ opt <- parse_args(opt_parser)
 eta_true <- as.numeric(opt$eta); B <- as.numeric(opt$N_iter)
 n_samp <- as.numeric(opt$n_samp); lambda0 <- as.numeric(opt$lambda)
 eps <- as.numeric(opt$eps)
+
 
 #parameters for the signal
 mean_sig <- 1.28
@@ -64,29 +62,6 @@ qb <- function(x, beta){
          scale = l, shape = beta)
 }
 
-qb_bkg_model <- function(beta, data){
-  qb_i <- sapply(data, function(x){
-    dtrunc(x, spec = 'pareto', a = l, b = u,
-           scale = l, shape = beta)
-  })
-  return(-sum(log(qb_i)))
-}
-
-d_log_qb <- function(beta, x){
-  1/beta - log(x) - (log(u)*u^(-beta) - log(l)*l^(-beta))/(l^(-beta) - u^(-beta))
-}
-d2_log_qb <- function(beta){
-  -1/(beta^2) - 
-    ((log(l)^2)*l^(-beta) - (log(u)^2)*u^(-beta))/(l^(-beta) - u^(-beta)) -
-    ((log(u)*u^(-beta) - log(l)*l^(-beta))/(l^(-beta) - u^(-beta)))^2
-}
-
-beta_star <- uniroot(f = function(b) integrate(function(t) d_log_qb(b, t)*f(t), l, u)$value,
-                     interval = c(1e-3,10))$root
-
-mean1_in_gb <- (M_lower + mean_sig)/2; sd_in_gb <- 2*sd_sig
-mean2_in_gb <- (M_upper + mean_sig)/2;
-
 gb <- function(x, beta, lambda = lambda0) {
   fs_val1 <- dtrunc(x, mean = mean1_in_gb, sd = sd_in_gb,
                     a = l, b = u,
@@ -100,28 +75,58 @@ gb <- function(x, beta, lambda = lambda0) {
   return(lambda*(fs_val1+fs_val2) + (1-2*lambda)*qb)
 }
 
-S <- function(x, beta) fs(x)/gb(x, beta) - 1
-norm_S <- function(beta) integrate(function(x) (S(x, beta)^2)*gb(x,beta),
-                                   l, u)$value |> sqrt()
-S2 <- function(x, beta) (fs(x)/gb(x, beta) - 1)/norm_S(beta)^2
 
-d_S2 <- function(x, beta){
-  nrm_S <- norm_S(beta)
-  d_S <- (-fs(x)/gb(x, beta)^2)*dtrunc(x, spec = 'pareto', a = l, b = u,
-                                       scale = l, shape = beta)*
-    d_log_qb(beta, x)*(1-2*lambda0)
-  
-  d_normS2 <- -integrate(function(t) dtrunc(t, spec = 'pareto', a = l, b = u,
-                                            scale = l, shape = beta)*
-                           (fs(t)^2/gb(t,beta)^2)*d_log_qb(t,beta),
-                         l, u)$value * (1-2*lambda0)
-  S_val <- fs(x)/gb(x, beta) - 1
-  
-  return(((nrm_S^2)*d_S - S_val*d_normS2)/(nrm_S^4))
+qb_bkg_model <- function(beta, data){
+  qb_i <- sapply(data, function(x){
+    dtrunc(x, spec = 'pareto', a = l, b = u,
+           scale = l, shape = beta)
+  })
+  return(-sum(log(qb_i)))
 }
 
-theta0_beta_star <- integrate(function(x) S2(x, beta = beta_star)*f(x),
-                              l, u)$value
+d_log_qb <- function(beta, x){
+  1/beta - log(x) - (log(u)*u^(-beta) - log(l)*l^(-beta))/(l^(-beta) - u^(-beta))
+}
+
+beta_star <- uniroot(f = function(b) integrate(function(t) d_log_qb(b, t)*f(t), l, u)$value,
+                     interval = c(1e-3,10))$root
+
+mean1_in_gb <- (M_lower + mean_sig)/2; sd_in_gb <- 2*sd_sig
+mean2_in_gb <- (M_upper + mean_sig)/2;
+
+
+norm_S_star <- integrate(function(x){
+  fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+               mean = mean_sig, sd = sd_sig)
+  fs_val1 <- dtrunc(x, mean = mean1_in_gb, sd = sd_in_gb,
+                    a = l, b = u,
+                    spec = 'norm')
+  fs_val2 <-  dtrunc(x, mean = mean2_in_gb, sd = sd_in_gb,
+                     a = l, b = u,
+                     spec = 'norm')
+  qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+               scale = l, shape = beta_star)
+  gb <- lambda0*(fs_val1+fs_val2) + (1-2*lambda0)*qb
+  S_val <- fs/gb - 1
+  return((S_val^2)*gb)}, l, u)$value |> sqrt()
+
+
+theta0_beta_star <- integrate(function(x){
+  fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+               mean = mean_sig, sd = sd_sig)
+  fs_val1 <- dtrunc(x, mean = mean1_in_gb, sd = sd_in_gb,
+                    a = l, b = u,
+                    spec = 'norm')
+  fs_val2 <-  dtrunc(x, mean = mean2_in_gb, sd = sd_in_gb,
+                     a = l, b = u,
+                     spec = 'norm')
+  qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+               scale = l, shape = beta_star)
+  gb <- lambda0*(fs_val1+fs_val2) + (1-2*lambda0)*qb
+  S_val <- fs/gb - 1
+  S2_val <- S_val/(norm_S_star^2)
+  return(S2_val*f(x))
+}, l, u)$value
 
 set.seed(12345)
 seeds <- sample.int(.Machine$integer.max, B)
@@ -159,22 +164,111 @@ test_stat <- foreach(i = 1:B, .combine = c,
     
     beta_hat <- opt$par
     
-    S2_phys_vec <- sapply(phys_samp, 
-                          function(x) S2(x, beta = beta_hat))
-    theta0_hat <- mean(S2_phys_vec)
-    J1_hat <- -d2_log_qb(beta_hat)
-    V1_hat <- sapply(phys_samp,
-                     function(x) d_log_qb(beta = beta_hat, x)^2) |> mean()
+    norm_S <- integrate(function(x){
+      fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                   mean = mean_sig, sd = sd_sig)
+      fs_val1 <- dtrunc(x, mean = mean1_in_gb, sd = sd_in_gb,
+                        a = l, b = u,
+                        spec = 'norm')
+      fs_val2 <-  dtrunc(x, mean = mean2_in_gb, sd = sd_in_gb,
+                         a = l, b = u,
+                         spec = 'norm')
+      qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                   scale = l, shape = beta_hat)
+      gb <- lambda0*(fs_val1+fs_val2) + (1-2*lambda0)*qb
+      S_val <- fs/gb - 1
+      return((S_val^2)*gb)
+    }, l, u)$value |> sqrt()
     
-    d_theta_hat <- sapply(phys_samp, function(x) d_S2(x, beta = beta_hat)) |> mean()
+    d_normS2 <- -integrate(function(x){
+      fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                   mean = mean_sig, sd = sd_sig)
+      fs_val1 <- dtrunc(x, mean = mean1_in_gb, sd = sd_in_gb,
+                        a = l, b = u,
+                        spec = 'norm')
+      fs_val2 <-  dtrunc(x, mean = mean2_in_gb, sd = sd_in_gb,
+                         a = l, b = u,
+                         spec = 'norm')
+      qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                   scale = l, shape = beta_hat)
+      gb <- lambda0*(fs_val1+fs_val2) + (1-2*lambda0)*qb
+      d_log_qb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) -
+                                           log(l)*l^(-beta_hat))/(l^(-beta_hat) - 
+                                                                    u^(-beta_hat))
+      return(qb*((fs/gb)^2)*d_log_qb)
+    }, l, u)$value * (1-2*lambda0)
+    
+    S2_phys_vec <- sapply(phys_samp, 
+                          function(x) {
+                            fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                                         mean = mean_sig, sd = sd_sig)
+                            fs_val1 <- dtrunc(x, mean = mean1_in_gb, sd = sd_in_gb,
+                                              a = l, b = u,
+                                              spec = 'norm')
+                            fs_val2 <-  dtrunc(x, mean = mean2_in_gb, sd = sd_in_gb,
+                                               a = l, b = u,
+                                               spec = 'norm')
+                            qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                                         scale = l, shape = beta_hat)
+                            gb <- lambda0*(fs_val1+fs_val2) + (1-2*lambda0)*qb
+                            S_val <- (fs/gb - 1)
+                            return(S_val/(norm_S^2))
+                          })
+    
+    theta0_hat <- mean(S2_phys_vec)
+    J1_hat <- -1/(beta_hat^2) - 
+      ((log(l)^2)*l^(-beta_hat) - (log(u)^2)*u^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat)) -
+      ((log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat)))^2
+    V1_hat <- sapply(phys_samp,
+                     function(x){
+                       val <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
+                       return(val^2)
+                     }) |> mean()
+    
+    d_theta_hat <- sapply(phys_samp, function(x){
+      fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                   mean = mean_sig, sd = sd_sig)
+      fs_val1 <- dtrunc(x, mean = mean1_in_gb, sd = sd_in_gb,
+                        a = l, b = u,
+                        spec = 'norm')
+      fs_val2 <-  dtrunc(x, mean = mean2_in_gb, sd = sd_in_gb,
+                         a = l, b = u,
+                         spec = 'norm')
+      qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                   scale = l, shape = beta_hat)
+      gb <- lambda0*(fs_val1+fs_val2) + (1-2*lambda0)*qb
+      S_val <- (fs/gb - 1)
+      d_log_qb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) -
+                                           log(l)*l^(-beta_hat))/(l^(-beta_hat) - 
+                                                                    u^(-beta_hat))
+      d_S <- (-fs/(gb^2))*qb*d_log_qb*(1-2*lambda0)
+      return(((norm_S^2)*d_S - S_val*d_normS2)/(norm_S^4))
+    }) |> mean()
     
     test_num <- sqrt(n_samp)*(theta0_hat - theta0_beta_star)
     test_denom <- sqrt(
-      
       (mean(S2_phys_vec^2) - theta0_hat^2) +
         V1_hat/(J1_hat^2) * (d_theta_hat^2) + 
         2 * (1/J1_hat) * d_theta_hat *
-        sapply(phys_samp, function(x) S2(x, beta = beta_hat)*d_log_qb(beta_hat, x)) |> mean()
+        sapply(phys_samp, function(x){
+          fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                       mean = mean_sig, sd = sd_sig)
+          fs_val1 <- dtrunc(x, mean = mean1_in_gb, sd = sd_in_gb,
+                            a = l, b = u,
+                            spec = 'norm')
+          fs_val2 <-  dtrunc(x, mean = mean2_in_gb, sd = sd_in_gb,
+                             a = l, b = u,
+                             spec = 'norm')
+          qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                       scale = l, shape = beta_hat)
+          gb <- lambda0*(fs_val1+fs_val2) + (1-2*lambda0)*qb
+          S_val <- (fs/gb - 1)
+          d_log_qb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) -
+                                               log(l)*l^(-beta_hat))/(l^(-beta_hat) - 
+                                                                        u^(-beta_hat))
+          S2_val <- S_val/(norm_S^2)
+          return(S2_val*d_log_qb)
+        }) |> mean()
     )
     
     test_num/test_denom

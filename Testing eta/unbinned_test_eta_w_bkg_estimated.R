@@ -5,16 +5,31 @@ library(VGAM)
 library(doSNOW)
 library(parallel)
 library(foreach)
+library(optparse)
 l <- 1; u <- 2
-################################################################
-################ SIGNAL AND SIGNAL REGION ######################
-################################################################
+
+option_list <- list(
+  make_option(c("-e", "--eta"), type = "double", default = 0,
+              help = "true value of eta", metavar = "number"),
+  make_option(c("-B", "--N_iter"), type = "integer", default = 1e4,
+              help = "Number of Iterations", metavar = "number"),
+  make_option(c('-n', '--n_phys'), type = "integer", default = 2e3,
+              help = 'physics sample size', metavar = "number"),
+  make_option(c('-r', '--bkg_phys'), type = "double", default = 1,
+              help = 'bkg to physics sample size ratio', metavar = "number")
+)
+
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+
+eta_true <- as.numeric(opt$eta); B <- as.numeric(opt$N_iter)
+n_phys <- as.numeric(opt$n_phys); bkg_to_phys_ratio <- as.numeric(opt$bkg_phys)
+n_bkg <- n_phys*bkg_to_phys_ratio
+
 
 #parameters for the signal
 mean_sig <- 1.28
 sd_sig <- 0.02
-
-eta_true <- 0
 
 # signal density
 fs <- function(x, mean = mean_sig) dtrunc(x, a = l, b = u, spec = 'norm', mean = mean, sd = sd_sig)
@@ -41,34 +56,6 @@ gb_bkg_model <- function(beta, data){
   return(-sum(log(gb_i)))
 }
 
-d_log_gb <- function(beta, x){
-  1/beta - log(x) - (log(u)*u^(-beta) - log(l)*l^(-beta))/(l^(-beta) - u^(-beta))
-}
-d2_log_gb <- function(beta){
-  -1/(beta^2) - 
-    ((log(l)^2)*l^(-beta) - (log(u)^2)*u^(-beta))/(l^(-beta) - u^(-beta)) -
-    ((log(u)*u^(-beta) - log(l)*l^(-beta))/(l^(-beta) - u^(-beta)))^2
-}
-
-S <- function(x, beta) fs(x)/gb(x, beta) - 1
-norm_S <- function(beta) integrate(function(x) (S(x, beta)^2)*gb(x,beta),
-                                   l, u)$value |> sqrt()
-S2 <- function(x, beta) (fs(x)/gb(x, beta) - 1)/norm_S(beta)^2
-
-d_S2 <- function(x, beta){
-  nrm_S <- norm_S(beta)
-  d_S <- (-fs(x)/gb(x, beta))*d_log_gb(beta, x)
-  d_normS2 <- -integrate(function(t) (fs(t)^2/gb(t,beta))*d_log_gb(t,beta),
-                         l, u)$value
-  S_val <- fs(x)/gb(x, beta) - 1
-  
-  return(((nrm_S^2)*d_S - S_val*d_normS2)/(nrm_S^4))
-}
-
-bkg_to_phys_ratio <- 2
-B <- 1e4
-n_phys <- 5e3
-n_bkg <- n_phys*bkg_to_phys_ratio
 set.seed(12345)
 seeds <- sample.int(.Machine$integer.max, B)
 
@@ -105,23 +92,72 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
     )
     
     if (is.null(opt)) return(NA_real_)  # skip this iteration
-    
     beta_hat <- opt$par
+    norm_S <- integrate(function(x) {
+      fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
+                   mean = mean_sig, sd = sd_sig)
+      gb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                   scale = l, shape = beta_hat)
+      return(((fs/gb-1)^2)*gb)
+    },l, u)$value |> sqrt()
+    d_normS2 <- -integrate(function(x){
+      fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
+                   mean = mean_sig, sd = sd_sig)
+      gb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                   scale = l, shape = beta_hat)
+      d_log_gb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
+      return(((fs^2)/gb)*d_log_gb)
+    },l, u)$value
     
     S2_phys_vec <- sapply(phys_samp, 
-                          function(x) S2(x, beta = beta_hat))
-    S2_bkg_vec <- sapply(bkg_samp, 
-                         function(x) S2(x, beta = beta_hat))
+                          function(x){
+                            fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
+                                         mean = mean_sig, sd = sd_sig)
+                            gb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                                         scale = l, shape = beta_hat)
+                            return((fs/gb-1)/(norm_S^2))
+                          })
+    S2_bkg_vec <- sapply(bkg_samp,
+                         function(x){
+                           fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
+                                        mean = mean_sig, sd = sd_sig)
+                           gb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                                        scale = l, shape = beta_hat)
+                           return((fs/gb-1)/(norm_S^2))
+                         })
     theta_0_hat <- mean(S2_phys_vec)
     delta_0_hat <- mean(S2_bkg_vec)
-    J1_hat <- -d2_log_gb(beta_hat)
+    J1_hat <- -1/(beta_hat^2) - 
+      ((log(l)^2)*l^(-beta_hat) - (log(u)^2)*u^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat)) -
+      ((log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat)))^2
     V1_hat <- sapply(bkg_samp,
-                     function(x) d_log_gb(beta = beta_hat, x)^2) |> mean()
+                     function(x){
+                       val <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
+                       return(val^2)
+                     } ) |> mean()
     
     eta_hat <- (theta_0_hat - delta_0_hat)/(1-delta_0_hat)
     
-    d_theta_hat <- sapply(phys_samp, function(x) d_S2(x, beta = beta_hat)) |> mean()
-    d_delta_hat <- sapply(bkg_samp, function(x) d_S2(x, beta = beta_hat)) |> mean()
+    d_theta_hat <- sapply(phys_samp, function(x){
+      fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
+                   mean = mean_sig, sd = sd_sig)
+      gb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                   scale = l, shape = beta_hat)
+      S_val <- fs/gb - 1
+      d_log_gb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
+      d_S <- (-fs/gb)*d_log_gb
+      return(((norm_S^2)*d_S - S_val*d_normS2)/(norm_S^4))
+    }) |> mean()
+    d_delta_hat <- sapply(bkg_samp,function(x){
+      fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
+                   mean = mean_sig, sd = sd_sig)
+      gb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                   scale = l, shape = beta_hat)
+      S_val <- fs/gb - 1
+      d_log_gb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
+      d_S <- (-fs/gb)*d_log_gb
+      return(((norm_S^2)*d_S - S_val*d_normS2)/(norm_S^4))
+    }) |> mean()
     
     test_num <- sqrt(n_phys*n_bkg)*(eta_hat - eta_true)
     test_denom <- sqrt(
@@ -130,8 +166,15 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
         n_phys*V1_hat/(J1_hat^2) * (d_theta_hat/(1-delta_0_hat) + ((theta_0_hat-1)/((1-delta_0_hat)^2))*d_delta_hat)^2 + 
         2 * (n_phys/J1_hat) * (theta_0_hat-1)/((1-delta_0_hat)^2) * 
         (d_theta_hat/(1-delta_0_hat) + ((theta_0_hat-1)/((1-delta_0_hat)^2))*d_delta_hat) * 
-        sapply(bkg_samp, function(x) S2(x, beta = beta_hat)*d_log_gb(beta_hat, x)) |> mean()
-    )
+        sapply(bkg_samp, function(x){
+          fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
+                       mean = mean_sig, sd = sd_sig)
+          gb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                       scale = l, shape = beta_hat)
+          S2_val <- (fs/gb - 1)/(norm_S^2)
+          d_log_gb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
+          return(S2_val*d_log_gb)
+        }) |> mean())
     
     test_num/test_denom
   }
@@ -140,7 +183,8 @@ close(pb)
 Sys.time() - start_time
 stopCluster(cl)
 
-file_name <- paste0('Results/unbinned_test_eta_w_bkg__',
+file_name <- paste0('/home/baner175/Desktop/background_modeling/Testing eta/',
+                    'Results/unbinned_test_eta_w_bkg__',
                     'beta_estimated_',
                     'B(',B,')_',
                     'n_phys(',n_phys,')_',
