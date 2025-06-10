@@ -278,7 +278,7 @@ close(pb)
 Sys.time() - start_time
 stopCluster(cl)
 
-file_name <- paste0('/home/baner175/Desktop/background_modeling/Testing eta/',
+file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
                     'Results/unbinned_test_eta_wo_bkg__',
                     'beta_estimated_',
                     'B(',B,')_',
