@@ -62,6 +62,9 @@ qb <- function(x, beta){
          scale = l, shape = beta)
 }
 
+mean1_in_gb <- (M_lower + mean_sig)/2; sd_in_gb <- 2*sd_sig
+mean2_in_gb <- (M_upper + mean_sig)/2;
+
 gb <- function(x, beta, lambda = lambda0) {
   fs_val1 <- dtrunc(x, mean = mean1_in_gb, sd = sd_in_gb,
                     a = l, b = u,
@@ -90,10 +93,6 @@ d_log_qb <- function(beta, x){
 
 beta_star <- uniroot(f = function(b) integrate(function(t) d_log_qb(b, t)*f(t), l, u)$value,
                      interval = c(1e-3,10))$root
-
-mean1_in_gb <- (M_lower + mean_sig)/2; sd_in_gb <- 2*sd_sig
-mean2_in_gb <- (M_upper + mean_sig)/2;
-
 
 norm_S_star <- integrate(function(x){
   fs <- dtrunc(x, a = l, b = u, spec = 'norm',
