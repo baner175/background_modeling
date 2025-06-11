@@ -43,7 +43,7 @@ file_name <- paste0('Results/unbinned_test_eta_wo_bkg__',
 beta0 <- 3.87; B <- 1e4; n_samp <- 5e3
 lambda0 <- 0; eta_true <- 0
 
-file_name <- paste0('Results/unbinned_test_eta_w_bkg__',
+file_name <- paste0('Results/unbinned_test_eta_wo_bkg__',
                     'beta_known(',beta0,')_',
                     'B(',B,')_',
                     'n_samp(',n_samp,')_',
