@@ -55,6 +55,8 @@ norm_S <- integrate(function(x) {
                mean = mean_sig, sd = sd_sig)
   gb <- dtrunc(x, spec = 'pareto', a = l, b = u,
                scale = l, shape = beta0)
+  S_val <- (fs/gb-1)
+  return((S_val^2)*gb)
 },l, u)$value |> sqrt()
 
 
