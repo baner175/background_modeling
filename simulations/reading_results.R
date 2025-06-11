@@ -23,9 +23,32 @@ file_name <- paste0('Results/unbinned_test_eta_w_bkg__',
                     'beta_known(',beta0,')_',
                     'B(',B,')_',
                     'n_phys(',n_phys,')_',
-                    'bkg_to_phys(',bkg_to_phys_ratio,')_','eta(',eta_true,')',
-                    '.csv')
+                    'bkg_to_phys(',bkg_to_phys_ratio,')_',
+                    'eta(',eta_true,')', '.csv')
 
+# WITHOUT BKG ONLY SAMPLE ################################
+
+# UNBINNED; beta estimated:
+B <- 1e4; n_samp <- 5e3
+lambda0 <- 0; eta_true <- 0
+
+file_name <- paste0('Results/unbinned_test_eta_wo_bkg__',
+                    'beta_estimated_',
+                    'B(',B,')_',
+                    'n_samp(',n_samp,')_',
+                    'lambda(',lambda0,')_',
+                    'eta(',eta_true,')','.csv')
+
+# UNBINNED; beta known:
+beta0 <- 3.87; B <- 1e4; n_samp <- 5e3
+lambda0 <- 0; eta_true <- 0
+
+file_name <- paste0('Results/unbinned_test_eta_w_bkg__',
+                    'beta_known(',beta0,')_',
+                    'B(',B,')_',
+                    'n_samp(',n_samp,')_',
+                    'lambda(',lambda0,')_',
+                    'eta(',eta_true,')','.csv')
 
 # plotting ecdf for eta test statistic and comparing with pnorm
 df <- read.csv(file_name, header = TRUE)
