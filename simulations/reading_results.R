@@ -69,7 +69,7 @@ legend('bottomright',
        col = c('black', 'red'), lty = c(2,1), lwd = 2,
        bty = 'n')
 title(main = plt_title)
-mean(df$test_stat>qnorm(0.05, lower.tail = FALSE))
+print(mean(df$test_stat>qnorm(0.05, lower.tail = FALSE)))
 
 ####################################################################
 # LRT simulation:
