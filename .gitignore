@@ -9,3 +9,4 @@ reading material/*
 temp_*.R
 *.log
 *.sh#
+*.root
