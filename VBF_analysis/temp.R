@@ -4,6 +4,7 @@ library(VGAM)
 library(latex2exp)
 library(knitr)
 library(kableExtra)
+library(optparse)
 
 
 # source('signal_search_functions.R')
