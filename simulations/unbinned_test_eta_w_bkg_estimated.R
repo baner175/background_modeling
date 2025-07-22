@@ -163,9 +163,9 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
     test_denom <- sqrt(
       (n_bkg/(1-delta_0_hat)^2) * (mean(S2_phys_vec^2) - theta_0_hat^2) +
         n_phys*((theta_0_hat - 1)^2/(1-delta_0_hat)^4) * (mean(S2_bkg_vec^2) - delta_0_hat^2) + 
-        n_phys*V1_hat/(J1_hat^2) * (d_theta_hat/(1-delta_0_hat) + ((theta_0_hat-1)/((1-delta_0_hat)^2))*d_delta_hat)^2 + 
+        n_phys*V1_hat/(J1_hat^2) * (-d_theta_hat/(1-delta_0_hat) + ((theta_0_hat-1)/((1-delta_0_hat)^2))*d_delta_hat)^2 + 
         2 * (n_phys/J1_hat) * (theta_0_hat-1)/((1-delta_0_hat)^2) * 
-        (d_theta_hat/(1-delta_0_hat) + ((theta_0_hat-1)/((1-delta_0_hat)^2))*d_delta_hat) * 
+        (-d_theta_hat/(1-delta_0_hat) + ((theta_0_hat-1)/((1-delta_0_hat)^2))*d_delta_hat) * 
         sapply(bkg_samp, function(x){
           fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
                        mean = mean_sig, sd = sd_sig)
