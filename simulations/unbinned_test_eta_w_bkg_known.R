@@ -116,7 +116,7 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
     
     test_num <- sqrt(n_phys*n_bkg)*(eta_hat - eta_true)
     test_denom <- sqrt(
-      n_bkg*sig_theta0_hat_sq/((1- delta_0_hat2)^2) + 
+      n_bkg*sig_theta0_hat_sq/((1- delta_0_hat)^2) + 
         n_phys*sig_delta0_hat_sq*((theta_0_hat-1)^2)/((1-delta_0_hat)^4)
     )
     test_num/test_denom
