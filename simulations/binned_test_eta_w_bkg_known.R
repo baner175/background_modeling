@@ -26,14 +26,10 @@ option_list <- list(
 opt_parser <- OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 
-# eta_true <- as.numeric(opt$eta); B <- as.numeric(opt$N_iter);
-# k <- as.numeric(opt$bins)
-# T_phys <- as.numeric(opt$T_phys); bkg_to_phys_ratio <- as.numeric(opt$bkg_phys)
-# T_bkg <- T_phys*bkg_to_phys_ratio; beta0 <- as.numeric(opt$beta)
-
-eta_true <- 0; B <- 10;
-k <- 100;  beta0 <- 3.87
-T_phys <- 1e3; bkg_to_phys_ratio <- 2; T_bkg <- T_phys*bkg_to_phys_ratio
+eta_true <- as.numeric(opt$eta); B <- as.numeric(opt$N_iter);
+k <- as.numeric(opt$bins)
+T_phys <- as.numeric(opt$T_phys); bkg_to_phys_ratio <- as.numeric(opt$bkg_phys)
+T_bkg <- T_phys*bkg_to_phys_ratio; beta0 <- as.numeric(opt$beta)
 
 #parameters for the signal
 mean_sig <- 1.28
@@ -138,7 +134,7 @@ file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
                     'Results/binned_test_eta_w_bkg__',
                     'beta_known(',beta0,')_',
                     'B(',B,')_',
-                    'n_phys(',n_phys,')_',
+                    'T_phys(',T_phys,')_', 'n_bins(',k,')_',
                     'bkg_to_phys(',bkg_to_phys_ratio,')_','eta(',eta_true,')','.csv')
 
 write.csv(data.frame(test_stat = test_stat_eta),
