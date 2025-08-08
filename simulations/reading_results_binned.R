@@ -30,7 +30,7 @@ file_name <- paste0('Results/binned_test_eta_w_bkg__',
 # WITHOUT BKG ONLY SAMPLE ################################
 
 # binned; beta estimated:
-B <- 1e4; n_samp <- 5e3; k <- 1e2
+B <- 1e4; T_phys <- 5e3; k <- 1e2
 lambda0 <- 0; eta_true <- 0
 
 file_name <- paste0('Results/binned_test_eta_wo_bkg__',
@@ -41,7 +41,7 @@ file_name <- paste0('Results/binned_test_eta_wo_bkg__',
                     'eta(',eta_true,')','.csv')
 
 # binned; beta known:
-beta0 <- 3.87; B <- 1e4; n_samp <- 5e3; k <- 1e2
+beta0 <- 3.87; B <- 1e4; T_phys <- 5e3; k <- 1e2
 lambda0 <- 0; eta_true <- 0
 
 file_name <- paste0('Results/binned_test_eta_wo_bkg__',
