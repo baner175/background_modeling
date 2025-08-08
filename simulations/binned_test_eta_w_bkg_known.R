@@ -31,6 +31,10 @@ k <- as.numeric(opt$bins)
 T_phys <- as.numeric(opt$T_phys); bkg_to_phys_ratio <- as.numeric(opt$bkg_phys)
 T_bkg <- T_phys*bkg_to_phys_ratio; beta0 <- as.numeric(opt$beta)
 
+bin_ends <- seq(l, u, length.out = k+1)
+xi <- (bin_ends[-1] + bin_ends[-(k+1)])/2
+
+
 #parameters for the signal
 mean_sig <- 1.28
 sd_sig <- 0.02
@@ -92,8 +96,6 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
     u_mask <- runif(N)
     phys_samp <- ifelse(u_mask <= eta_true, s_samp, b_samp)
     
-    bin_ends <- seq(l, u, length.out = k+1)
-    xi <- (bin_ends[-1] + bin_ends[-(k+1)])/2
     ni <- sapply(1:k, function(i){
       sum((phys_samp>bin_ends[i])&(phys_samp<=bin_ends[i+1]))
     })
