@@ -127,9 +127,9 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
                          })
     theta_0_hat <- mean(S2_phys_vec)
     delta_0_hat <- mean(S2_bkg_vec)
-    J1_hat <- -1/(beta_hat^2) - 
+    J1_hat <- -(-1/(beta_hat^2) - 
       ((log(l)^2)*l^(-beta_hat) - (log(u)^2)*u^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat)) -
-      ((log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat)))^2
+      ((log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat)))^2)
     V1_hat <- sapply(bkg_samp,
                      function(x){
                        val <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
