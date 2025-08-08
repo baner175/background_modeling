@@ -183,7 +183,7 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
         (1/J_hat^2)*(cb_hat*d_delta_0_hat*sqrt(N)*((theta_0_hat-1)/(1-delta_0_hat)^2) - 
                        sqrt(cb_hat*c_hat)*sqrt(M)*d_theta_0_hat/(1-delta_0_hat))^2*
         (sum((d_log_qb_xi^2)*mi)/M) + 
-        (2*J_hat*sqrt(N)*(theta_0_hat - 1)/((1-delta_0_hat)^2))*
+        (2*(1/J_hat)*sqrt(N)*(theta_0_hat - 1)/((1-delta_0_hat)^2))*
         (sum(S2_vec*d_log_qb_xi*mi)/M)*
         (cb_hat*d_delta_0_hat*sqrt(N)*((theta_0_hat-1)/(1-delta_0_hat)^2) - 
            sqrt(cb_hat*c_hat)*sqrt(M)*d_theta_0_hat/(1-delta_0_hat))
