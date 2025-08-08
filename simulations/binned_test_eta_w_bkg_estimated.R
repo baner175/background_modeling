@@ -1,0 +1,206 @@
+rm(list = ls())
+
+library(truncdist)
+library(VGAM)
+library(doSNOW)
+library(parallel)
+library(foreach)
+library(optparse)
+l <- 1; u <- 2
+
+option_list <- list(
+  make_option(c("-e", "--eta"), type = "double", default = 0,
+              help = "true value of eta", metavar = "number"),
+  make_option(c("-B", "--N_iter"), type = "integer", default = 1e4,
+              help = "Number of Iterations", metavar = "number"),
+  make_option(c('-T', '--T_phys'), type = "integer", default = 2e3,
+              help = 'Expected physics sample size', metavar = "number"),
+  make_option(c('-r', '--bkg_phys'), type = "double", default = 1,
+              help = 'bkg to physics sample size ratio', metavar = "number"),
+  make_option(c('-k', '--bins'), type = "integer", default = 100,
+              help = 'Number of bins', metavar = "number")
+)
+
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+
+eta_true <- as.numeric(opt$eta); B <- as.numeric(opt$N_iter);
+k <- as.numeric(opt$bins)
+T_phys <- as.numeric(opt$T_phys); bkg_to_phys_ratio <- as.numeric(opt$bkg_phys)
+T_bkg <- T_phys*bkg_to_phys_ratio
+
+bin_ends <- seq(l, u, length.out = k+1)
+xi <- (bin_ends[-1] + bin_ends[-(k+1)])/2
+
+#parameters for the signal
+mean_sig <- 1.28
+sd_sig <- 0.02
+
+# signal density
+fs <- function(x, mean = mean_sig) dtrunc(x, a = l, b = u, spec = 'norm', mean = mean, sd = sd_sig)
+
+#parameter for the true background
+bkg_rate <- 3.3; bkg_shape <- 0.5
+
+# true bkg density
+fb_true <- function(x) dtrunc(x, a = l, b = u, spec = 'gamma',
+                              rate = bkg_rate, shape = bkg_shape)
+# true mixture density
+f <- function(x) eta_true*fs(x)+(1-eta_true)*fb_true(x)
+
+qb <- function(x, beta){
+  dtrunc(x, spec = 'pareto', a = l, b = u,
+         scale = l, shape = beta)
+}
+
+qb_bkg_model <- function(beta, bin_counts){
+  qb_i <- sapply(1:k, function(i){
+    integrate(function(x){
+      dtrunc(x, spec = 'pareto', a = l, b = u,
+             scale = l, shape = beta)
+    }, bin_ends[i], bin_ends[i+1])$value
+  })
+  return(-sum(bin_counts*log(qb_i)))
+}
+
+
+# norm_S <- integrate(function(x) {
+#   fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+#                mean = mean_sig, sd = sd_sig)
+#   qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+#                scale = l, shape = beta0)
+#   S_val <- (fs/qb-1)
+#   return((S_val^2)*qb)
+# },l, u)$value |> sqrt()
+
+
+set.seed(12345)
+seeds <- sample.int(.Machine$integer.max, B)
+
+cl <- makeCluster(8)
+registerDoSNOW(cl)
+pb <- txtProgressBar(max = B, style = 3)
+progress <- function(n) setTxtProgressBar(pb, n)
+opts <- list(progress = progress)
+
+start_time <- Sys.time()
+test_stat_eta <- foreach(i = 1:B, .combine = c,
+                         .packages = c('truncdist', 'VGAM'),
+                         .options.snow = opts) %dopar%
+  {
+    set.seed(seeds[i])
+    # total sample sizes:
+    M <- rpois(1, lambda = T_bkg); N <- rpois(1, lambda = T_phys)
+    
+    # bkg-only sample:
+    bkg_samp <- rtrunc(M, a = l, b = u, spec = 'gamma',
+                       rate = bkg_rate, shape = bkg_shape)
+    
+    # physics-sample:
+    s_samp <- rtrunc(N, a = l, b = u, spec = 'norm',
+                     mean = mean_sig, sd = sd_sig)
+    b_samp <- rtrunc(N, a = l, b = u, spec = 'gamma',
+                     rate = bkg_rate, shape = bkg_shape)
+    u_mask <- runif(N)
+    phys_samp <- ifelse(u_mask <= eta_true, s_samp, b_samp)
+    
+    ni <- sapply(1:k, function(i){
+      sum((phys_samp>bin_ends[i])&(phys_samp<=bin_ends[i+1]))
+    })
+    mi <- sapply(1:k, function(i){
+      sum((bkg_samp>bin_ends[i])&(bkg_samp<=bin_ends[i+1]))
+    })
+    
+    opt <- tryCatch(
+      nlminb(start = 0.01,
+             objective = qb_bkg_model,
+             lower = 0, upper = Inf,
+             bin_counts = mi),
+      error = function(e) return(NULL)
+    )
+    if (is.null(opt)) return(NA_real_)  # skip this iteration
+    beta_hat <- opt$par
+    norm_S <- integrate(function(x) {
+      fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
+                   mean = mean_sig, sd = sd_sig)
+      qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                   scale = l, shape = beta_hat)
+      return(((fs/qb-1)^2)*qb)
+    },l, u)$value |> sqrt()
+    S2_vec <- sapply(xi,
+                     function(x){
+                       fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                                    mean = mean_sig, sd = sd_sig)
+                       qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                                    scale = l, shape = beta_hat)
+                       S_val <- fs/qb - 1
+                       return((fs/qb-1)/(norm_S^2))
+                     })
+    theta_0_hat <- sum(S2_vec*ni)/N
+    delta_0_hat <- sum(S2_vec*mi)/M
+    
+    d_log_qb_xi <- sapply(xi, function(x){
+      1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
+    })
+    d2_log_qb <- -1/(beta_hat^2) - 
+      ((log(l)^2)*l^(-beta_hat) - (log(u)^2)*u^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat)) -
+      ((log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat)))^2
+    
+    d_normS2 <- -integrate(function(x){
+      fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
+                   mean = mean_sig, sd = sd_sig)
+      qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                   scale = l, shape = beta_hat)
+      d_log_qb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
+      return(((fs^2)/qb)*d_log_qb)
+    },l, u)$value
+    
+    d_S2 <- sapply(xi, function(x){
+      fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
+                   mean = mean_sig, sd = sd_sig)
+      qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
+                   scale = l, shape = beta_hat)
+      d_log_qb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
+      num <- -((norm_S^2)*(fs/qb)*d_log_qb + (fs/qb-1)*d_normS2)
+      denom <- norm_S^4
+      return(num/denom)
+    })
+    
+    J_hat <- -(1/k)*sum(mi*d2_log_qb)
+    c_hat <- N/k; cb_hat <- M/k
+    d_theta_0_hat <- sum(d_S2*ni)/N
+    d_delta_0_hat <- sum(d_S2*mi)/M
+    
+    sig_theta0_hat_sq <- (1/N)*sum((S2_vec^2)*ni) - theta_0_hat^2
+    sig_delta0_hat_sq <- (1/M)*sum((S2_vec^2)*mi) - delta_0_hat^2
+    
+    eta_hat <- (theta_0_hat - delta_0_hat)/(1-delta_0_hat)
+    
+    test_num <- sqrt(N*M)*(eta_hat - eta_true)
+    test_denom <- sqrt(
+      M*sig_theta0_hat_sq/((1- delta_0_hat)^2) + 
+        N*sig_delta0_hat_sq*((theta_0_hat-1)^2)/((1-delta_0_hat)^4) + 
+        (1/J_hat^2)*(cb_hat*d_delta_0_hat*sqrt(N)*((theta_0_hat-1)/(1-delta_0_hat)^2) - 
+                       sqrt(cb_hat*c_hat)*sqrt(M)*d_theta_0_hat/(1-delta_0_hat))^2*
+        (sum((d_log_qb_xi^2)*mi)/M) + 
+        (2*J_hat*sqrt(N)*(theta_0_hat - 1)/((1-delta_0_hat)^2))*
+        (sum(S2_vec*d_log_qb_xi*mi)/M)*
+        (cb_hat*d_delta_0_hat*sqrt(N)*((theta_0_hat-1)/(1-delta_0_hat)^2) - 
+           sqrt(cb_hat*c_hat)*sqrt(M)*d_theta_0_hat/(1-delta_0_hat))
+    )
+    test_num/test_denom
+  }
+close(pb)
+
+Sys.time() - start_time
+stopCluster(cl)
+
+file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
+                    'Results/binned_test_eta_w_bkg__',
+                    'beta_estimated_',
+                    'B(',B,')_',
+                    'T_phys(',T_phys,')_', 'n_bins(',k,')_',
+                    'bkg_to_phys(',bkg_to_phys_ratio,')_','eta(',eta_true,')','.csv')
+
+write.csv(data.frame(test_stat = test_stat_eta),
+          file_name, row.names = FALSE)
