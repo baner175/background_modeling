@@ -5,7 +5,7 @@ library(latex2exp)
 # WITH BKG ONLY SAMPLE ##########################################
 
 # BINNED; beta estimated:
-B <- 1e4; n_phys <- 5e3; k <- 1e2
+B <- 1e4; T_phys <- 5e3; k <- 1e2
 bkg_to_phys_ratio <- 2; eta_true <- 0
 
 file_name <- paste0('Results/binned_test_eta_w_bkg__',
@@ -23,8 +23,7 @@ file_name <- paste0('Results/binned_test_eta_w_bkg__',
                     'beta_known(',beta0,')_',
                     'B(',B,')_',
                     'T_phys(',T_phys,')_', 'n_bins(',k,')_',
-                    'bkg_to_phys(',bkg_to_phys_ratio,')_',
-                    'eta(',eta_true,')','.csv')
+                    'bkg_to_phys(',bkg_to_phys_ratio,')_','eta(',eta_true,')','.csv')
 
 
 # WITHOUT BKG ONLY SAMPLE ################################
@@ -37,7 +36,7 @@ file_name <- paste0('Results/binned_test_eta_wo_bkg__',
                     'beta_estimated_',
                     'B(',B,')_',
                     'T_phys(',T_phys,')_', 'n_bins(',k,')_',
-                    'bkg_to_phys(',bkg_to_phys_ratio,')_',
+                    'lambda(',lambda0,')_',
                     'eta(',eta_true,')','.csv')
 
 # binned; beta known:
@@ -48,7 +47,7 @@ file_name <- paste0('Results/binned_test_eta_wo_bkg__',
                     'beta_known(',beta0,')_',
                     'B(',B,')_',
                     'T_phys(',T_phys,')_', 'n_bins(',k,')_',
-                    'bkg_to_phys(',bkg_to_phys_ratio,')_',
+                    'lambda(',lambda0,')_',
                     'eta(',eta_true,')','.csv')
 
 # plotting ecdf for eta test statistic and comparing with pnorm
