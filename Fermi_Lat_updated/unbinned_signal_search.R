@@ -186,7 +186,7 @@ gb <- function(y, lambda){
 
 hist(y, probability = TRUE, breaks = 50,
      col = 'white', xlab = 'log(x)',
-     main = TeX('Sensitivity Analysis for $g_b(x; \\hat{beta}_{bkg}, \\lambda)$'))
+     main = TeX('Sensitivity Analysis for $g_b(x; \\hat{beta}, \\lambda)$'))
 
 picture_l <- M_lower - 3; picture_u <- M_upper + 3
 
