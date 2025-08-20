@@ -126,7 +126,7 @@ spurious_max_joint_likelihood_C <- function(par){
                  mean = mean_sig, sd = sd_sig)
   fi <- eta*fs_i + (1-eta)*((1-eps)*qb_i + eps*fs_i)
   beta_log_lik <- dlnorm(beta, meanlog = log(beta_hat_wbkg), 
-                         sdlog = beta_hat_wbkg/abs(beta_hat_wbkg), 
+                         sdlog = beta_hat_wbkg_se/abs(beta_hat_wbkg), 
                          log = TRUE)
   # eps_log_lik <- dnorm(eps, mean = eps_sp_max_hat,
   #                       sd = eps_sp_max_hat_se,
