@@ -16,15 +16,15 @@ file_name <- paste0('Results/binned_test_eta_w_bkg__',
                     'eta(',eta_true,')','.csv')
 
 # binned; beta known:
-beta0 <- 3.87; B <- 1e4; n_phys <- 5e3; k <- 1e2
+beta0 <- 3.87; B <- 1e4; T_phys <- 5e3; k <- 1e2
 bkg_to_phys_ratio <- 2; eta_true <- 0
 
 file_name <- paste0('Results/binned_test_eta_w_bkg__',
                     'beta_known(',beta0,')_',
                     'B(',B,')_',
                     'T_phys(',T_phys,')_', 'n_bins(',k,')_',
-                    'bkg_to_phys(',bkg_to_phys_ratio,')_','eta(',eta_true,')','.csv')
-
+                    'bkg_to_phys(',bkg_to_phys_ratio,')_',
+                    'eta(',eta_true,')','.csv')
 
 # WITHOUT BKG ONLY SAMPLE ################################
 
@@ -70,3 +70,6 @@ legend('bottomright',
        bty = 'n')
 title(main = plt_title)
 print(mean(df$test_stat>qnorm(0.05, lower.tail = FALSE)))
+set.seed(12345)
+ks.test(x = df$test_stat, y = rnorm(B))
+
