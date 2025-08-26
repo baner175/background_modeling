@@ -276,22 +276,24 @@ d_delta0_hat_wbkg <- sum(d_S2_vec_wbkg*mi)/M
 var_S2_F_hat_wbkg <- sum((S2_vec_wbkg^2)*ni)/N - theta0_hat_wbkg^2
 var_S2_Fb_hat_wbkg <- sum((S2_vec_wbkg^2)*mi)/M - delta0_hat_wbkg^2
 
+d_theta0_T_wbkg <- 1/(1-delta0_hat_wbkg)
+d_delta0_T_wbkg <- (theta0_hat_wbkg-1)/((1-delta0_hat_wbkg)^2)
+cov_term_wbkg <- (sum(mi*S2_vec_wbkg*d_log_qb_wbkg_xi)/M)
+
+
 test_num <- sqrt(M*N)*(eta_hat_wbkg - 0)
 
 denom1 <- (M/((1-delta0_hat_wbkg)^2)) * var_S2_F_hat_wbkg
 
 denom2 <- N*(((theta0_hat_wbkg-1)^2)/((1-delta0_hat_wbkg)^4)) * var_S2_Fb_hat_wbkg
 
-denom3 <- (V_hat_wbkg/(J_hat_wbkg^2))*(cb_hat*d_delta0_hat_wbkg*sqrt(N)*((theta0_hat_wbkg-1)/((1-delta0_hat_wbkg)^2)) - 
-                                         sqrt(cb_hat*c_hat)*sqrt(M)*d_theta0_hat_wbkg/(1-delta0_hat_wbkg))^2
+denom3 <- N*(V_hat_wbkg/(J_hat_wbkg^2))*(cb_hat^2)*((d_theta0_T_wbkg*d_theta0_hat_wbkg + d_delta0_T_wbkg*d_delta0_hat_wbkg)^2)
 
-denom4 <- (2/J_hat_wbkg)*sqrt(N)*(theta0_hat_wbkg-1)/((1-delta0_hat_wbkg)^2)*
-  (sum(mi*d_log_qb_wbkg_xi*S2_vec_wbkg)/M)*
-  (cb_hat*d_delta0_hat_wbkg*sqrt(N)*((theta0_hat_wbkg-1)/((1-delta0_hat_wbkg)^2)) - 
-     sqrt(cb_hat*c_hat)*sqrt(M)*d_theta0_hat_wbkg/(1-delta0_hat_wbkg))
-  
+denom4 <- (2*N*cb_hat/J_hat_wbkg)*d_delta0_T_wbkg*(d_theta0_T_wbkg*d_theta0_hat_wbkg + 
+                                                     d_delta0_T_wbkg*d_delta0_hat_wbkg)*cov_term_wbkg
+
+
 test_denom <- sqrt(denom1 + denom2 + denom3 + denom4)
-
 
 eta_test_stat <- test_num/test_denom
 p_val_eta <- pnorm(eta_test_stat, lower.tail = FALSE)
