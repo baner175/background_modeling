@@ -160,34 +160,40 @@ test_stat_eta <- foreach(i = 1:B, .combine = c,
                    mean = mean_sig, sd = sd_sig)
       qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
                    scale = l, shape = beta_hat)
-      d_log_qb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
-      num <- -((norm_S^2)*(fs/qb)*d_log_qb + (fs/qb-1)*d_normS2)
+      d_log_qb_xi <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
+      num <- -((norm_S^2)*(fs/qb)*d_log_qb_xi + (fs/qb-1)*d_normS2)
       denom <- norm_S^4
       return(num/denom)
     })
     
     J_hat <- -(1/k)*sum(mi*d2_log_qb)
-    c_hat <- N/k; cb_hat <- M/k
-    d_theta_0_hat <- sum(d_S2*ni)/N
-    d_delta_0_hat <- sum(d_S2*mi)/M
+    V_hat <- sum((d_log_qb_xi^2)*mi)/M
+    cb_hat <- M/k
+    d_theta0_hat <- sum(d_S2*ni)/N
+    d_delta0_hat <- sum(d_S2*mi)/M
+    d_theta0_T <- 1/(1-delta_0_hat)
+    d_delta0_T <- (theta_0_hat-1)/((1-delta_0_hat)^2)
+    cov_term <- (sum(mi*S2_vec*d_log_qb_xi)/M)
     
-    sig_theta0_hat_sq <- (1/N)*sum((S2_vec^2)*ni) - theta_0_hat^2
-    sig_delta0_hat_sq <- (1/M)*sum((S2_vec^2)*mi) - delta_0_hat^2
+    var_S2_F_hat <- sum((S2_vec^2)*ni)/N - theta_0_hat^2
+    var_S2_Fb_hat <- sum((S2_vec^2)*mi)/M - delta_0_hat^2
     
     eta_hat <- (theta_0_hat - delta_0_hat)/(1-delta_0_hat)
     
-    test_num <- sqrt(N*M)*(eta_hat - eta_true)
-    test_denom <- sqrt(
-      M*sig_theta0_hat_sq/((1- delta_0_hat)^2) + 
-        N*sig_delta0_hat_sq*((theta_0_hat-1)^2)/((1-delta_0_hat)^4) + 
-        (1/J_hat^2)*(cb_hat*d_delta_0_hat*sqrt(N)*((theta_0_hat-1)/(1-delta_0_hat)^2) - 
-                       sqrt(cb_hat*c_hat)*sqrt(M)*d_theta_0_hat/(1-delta_0_hat))^2*
-        (sum((d_log_qb_xi^2)*mi)/M) + 
-        (2*(1/J_hat)*sqrt(N)*(theta_0_hat - 1)/((1-delta_0_hat)^2))*
-        (sum(S2_vec*d_log_qb_xi*mi)/M)*
-        (cb_hat*d_delta_0_hat*sqrt(N)*((theta_0_hat-1)/(1-delta_0_hat)^2) - 
-           sqrt(cb_hat*c_hat)*sqrt(M)*d_theta_0_hat/(1-delta_0_hat))
-    )
+    test_num <- sqrt(M*N)*(eta_hat - 0)
+    
+    denom1 <- (M/((1-delta_0_hat)^2)) * var_S2_F_hat
+    
+    denom2 <- N*(((theta_0_hat-1)^2)/((1-delta_0_hat)^4)) * var_S2_Fb_hat
+    
+    denom3 <- N*(V_hat/(J_hat^2))*(cb_hat^2)*((d_theta0_T*d_theta0_hat + d_delta0_T*d_delta0_hat)^2)
+    
+    denom4 <- (2*N*cb_hat/J_hat)*d_delta0_T*(d_theta0_T*d_theta0_hat + 
+                                               d_delta0_T*d_delta0_hat)*cov_term
+    
+    
+    test_denom <- sqrt(denom1 + denom2 + denom3 + denom4)
+    
     test_num/test_denom
   }
 close(pb)
