@@ -100,7 +100,7 @@ sp_eps_mu_likelihood <- function(eps, mu)
   fs_i <- sapply(1:k, function(i){
     integrate(function(t){
       dtrunc(t, spec = 'norm', a = l, b = u,
-             mean = mean_sig, sd = sd_sig)
+             mean = mu, sd = sd_sig)
     }, bin_ends[i], bin_ends[i+1])$value
   })
   fi <- (1-eps)*qb_i + eps*fs_i
