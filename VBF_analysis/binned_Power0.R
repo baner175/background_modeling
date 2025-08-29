@@ -532,7 +532,7 @@ res_sig_search <- rbind(res_sig_search,
                         mle_row, 
                         sp_max_row)
 
-caption <- paste0("Binned Signal Search Results: ", 
+caption <- paste0("Binned (", k," bins) Signal Search Results: ",
                   'Cat',cat,'_',scenario,
                   '_mu',mu_part_1,'p',mu_part_2, '<br> Bkg: BW X Power0')
 
