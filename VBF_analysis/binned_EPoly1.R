@@ -258,7 +258,7 @@ d2_int2_wbkg <- integrate(function(t){
 }, l, u)$value
 d2_log_qb_wbkg <- -(d2_int1_wbkg - d2_int2_wbkg^2)
 V_hat_wbkg <- sum((d_log_qb_wbkg_xi^2)*mi)/M
-J_hat_wbkg <- -sum(d2_log_qb_wbkg*mi)/M
+J_hat_wbkg <- -sum(d2_log_qb_wbkg*mi)/k
 d_normS_sq_wbkg <- -integrate(function(t) d_log_qb_wbkg(t)*(fs(t)^2)/qb_wbkg(t),
                               l, u)$value
 d_S2_vec_wbkg <- sapply(xi, function(x){
