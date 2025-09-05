@@ -1,3 +1,28 @@
+rm(list = ls())
+## Global parameters ##
+
+#parameters for the signal
+mean_sig <- 1.28
+sd_sig <- 0.02
+
+l <- 1; u <- 2
+
+# signal density
+fs <- function(x, mean = mean_sig) dtrunc(x, a = l, b = u, spec = 'norm', mean = mean, sd = sd_sig)
+
+#parameter for the true background
+bkg_rate <- 3.3; bkg_shape <- 0.5
+
+# true bkg density
+fb_true <- function(x) dtrunc(x, a = l, b = u, spec = 'gamma',
+                              rate = bkg_rate, shape = bkg_shape)
+
+gb <- function(x, beta = beta0){
+  dtrunc(x, spec = 'pareto', a = l, b = u,
+         scale = l, shape = beta)
+}
+
+
 source('functions_for_power_simulation_w_bkg.R')
 
 library(optparse)
