@@ -23,8 +23,6 @@ gb <- function(x, beta = beta0){
 }
 
 
-source('functions_for_power_simulation_w_bkg.R')
-
 library(optparse)
 
 option_list <- list(
@@ -51,6 +49,7 @@ eta_seq <- c(0, 0.01, 0.03, 0.05)
 # simulation results with known beta:
 
 low_binned_powers <- sapply(eta_seq, function(e) {
+  source('functions_for_power_simulation_w_bkg.R')
   simulated_power_binned(eta = e, nbins = 1e2, T_phys = n_phys,
                          r = bkg_to_phys_ratio, nsims = B,
                          seed = 12345, signif.level = 0.05,
@@ -58,6 +57,7 @@ low_binned_powers <- sapply(eta_seq, function(e) {
 })
 
 mid_binned_powers <- sapply(eta_seq, function(e) {
+  source('functions_for_power_simulation_w_bkg.R')
   simulated_power_binned(eta = e, nbins = 5e2, T_phys = n_phys,
                          r = bkg_to_phys_ratio, nsims = B,
                          seed = 12345, signif.level = 0.05,
@@ -65,6 +65,7 @@ mid_binned_powers <- sapply(eta_seq, function(e) {
 })
 
 high_binned_powers <- sapply(eta_seq, function(e) {
+  source('functions_for_power_simulation_w_bkg.R')
   simulated_power_binned(eta = e, nbins = 750, T_phys = n_phys,
                          r = bkg_to_phys_ratio, nsims = B,
                          seed = 12345, signif.level = 0.05,
@@ -73,6 +74,7 @@ high_binned_powers <- sapply(eta_seq, function(e) {
 
 
 unbinned_powers <- sapply(eta_seq, function(e) {
+  source('functions_for_power_simulation_w_bkg.R')
   simulated_power_unbinned(eta = e, n_phys = n_phys,
                            r = bkg_to_phys_ratio, nsims = B,
                            seed = 12345, signif.level = 0.05,
