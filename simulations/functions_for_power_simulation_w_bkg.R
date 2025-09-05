@@ -1,5 +1,3 @@
-rm(list = ls())
-
 library(truncdist)
 library(VGAM)
 library(doSNOW)
