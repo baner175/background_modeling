@@ -47,6 +47,8 @@ simulated_power_binned <- function(eta, nbins, T_phys,
   
   cl <- makeCluster(8)
   registerDoSNOW(cl)
+  clusterExport(cl, c('l', 'u', 'mean_sig', 'sd_sig', 'bkg_rate', 'bkg_shape',
+                      'qb_bkg_model_binned', 'qb_bkg_model_unbinned'))
   pb <- txtProgressBar(max = B, style = 3)
   progress <- function(n) setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
@@ -242,6 +244,8 @@ simulated_power_unbinned <- function(eta, n_phys,
   
   cl <- makeCluster(8)
   registerDoSNOW(cl)
+  clusterExport(cl, c('l', 'u', 'mean_sig', 'sd_sig', 'bkg_rate', 'bkg_shape',
+                      'qb_bkg_model_binned', 'qb_bkg_model_unbinned'))
   pb <- txtProgressBar(max = B, style = 3)
   progress <- function(n) setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
