@@ -72,11 +72,11 @@ unbinned_powers <- sapply(eta_seq, function(e) {
                            seed = 12345, signif.level = 0.05)
 })
 
-tab_beta_known <- data.frame(cbind(low_binned_powers, 
+tab_beta_est <- data.frame(cbind(low_binned_powers, 
                                    mid_binned_powers,
                                    high_binned_powers,
                                    unbinned_powers))
-colnames(tab_beta_known) <- paste0(c('low', 'mid', 'high', 'unbinned'), ' - beta known')
+colnames(tab_beta_est) <- paste0(c('low', 'mid', 'high', 'unbinned'), ' - beta known')
 
 file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
                     'Results/power_simulation_w_bkg__',
@@ -85,5 +85,5 @@ file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
                     'n_phys(',n_phys,')_',
                     'bkg_to_phys(',bkg_to_phys_ratio,').csv')
 
-write.csv(x = tab_beta_known, file_name,
+write.csv(x = tab_beta_est, file_name,
           row.names = FALSE)
