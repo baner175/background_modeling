@@ -1,0 +1,150 @@
+rm(list = ls())
+
+library(VGAM)
+library(truncdist)
+library(latex2exp)
+library(knitr)
+library(kableExtra)
+library(ggplot2)
+
+real_l <- 1; real_u <- 35
+l <- log(real_l); u <- log(real_u)
+
+mean_sig <- 3.5; sd_sig <- sqrt(0.01*3.5^2)
+eps <- 1e-3
+
+# SIGNAL DENSITY:
+fs <- function(x, mean = mean_sig, sd = sd_sig)
+{
+  return(dtrunc(exp(x), spec = 'norm', a = real_l, b = real_u,
+                mean = mean, sd = sd)*exp(x))
+}
+
+# SIGNAL CDF:
+Fs <- function(x, mean = mean_sig, sd = sd_sig)
+{
+  return(ptrunc(exp(x), spec = 'norm', a = real_l, b = real_u,
+                mean = mean, sd = sd))
+}
+
+phys_data <- read.table('Data_ex1.txt', header = TRUE)
+bkg_data <- read.table('cal.txt', header = TRUE)
+y <- log(bkg_data$x)
+x <- log(phys_data$x)
+
+N <- length(x); M <- length(y)
+k <- 1e2
+bin_ends <- seq(l, u, length.out = k+1)
+xi <- (bin_ends[1:k] + bin_ends[2:(k+1)])/2
+
+ni <- sapply(1:k, function(i){
+  sum((x > bin_ends[i])&(x <= bin_ends[i+1]))
+})
+mi <- sapply(1:k, function(i){
+  sum((y > bin_ends[i])&(y <= bin_ends[i+1]))
+})
+
+qb_model <- function(beta){
+  qb_i <- sapply(1:k, function(i){
+    integrate(function(t){
+      dtrunc(t, spec = 'exp', rate = beta, a = l, b = u)
+    }, bin_ends[i], bin_ends[i+1])$value
+  })
+  return(-sum(mi*log(qb_i)))
+}
+
+beta_hat <- nlminb(start = 0.01,
+                   objective = qb_model,
+                   upper = Inf, lower = -Inf)$par
+
+norm_S <- integrate(function(t){
+  fs <- dtrunc(exp(t), spec = 'norm', a = real_l, b = real_u,
+               mean = mean_sig, sd = sd_sig)*exp(t)
+  qb <- dtrunc(t, spec = 'exp', rate = beta_hat, a = l, b = u)
+  return(((fs/qb - 1)^2)*qb)
+}, l, u)$value |> sqrt()
+
+S2_vec <- sapply(xi, function(t){
+  fs <- dtrunc(exp(t), spec = 'norm', a = real_l, b = real_u,
+               mean = mean_sig, sd = sd_sig)*exp(t)
+  qb <- dtrunc(t, spec = 'exp', rate = beta_hat, a = l, b = u)
+  S_val <- (fs/qb - 1)
+  return(S_val/(norm_S^2))
+})
+
+theta0_hat <- sum(S2_vec*ni)/N; delta0_hat <- sum(S2_vec*mi)/M
+eta_hat <- (theta0_hat-delta0_hat)/(1-delta0_hat)
+
+test_num <- sqrt(M*N)*eta_hat
+
+d_normS_sq <- -integrate(function(t){
+  fs <- dtrunc(exp(t), spec = 'norm', a = real_l, b = real_u,
+               mean = mean_sig, sd = sd_sig)*exp(t)
+  qb <- dtrunc(t, spec = 'exp', rate = beta_hat, a = l, b = u)
+  d_log_qb <- (1/beta_hat) - t - 
+    (u*exp(-beta_hat*u) - l*exp(-beta_hat*l))/(exp(-beta_hat*l) - exp(-beta_hat*u))
+  return((fs^2)*d_log_qb/qb)
+}, l, u)$value
+
+d_S2 <- function(t){
+  fs <- dtrunc(exp(t), spec = 'norm', a = real_l, b = real_u,
+               mean = mean_sig, sd = sd_sig)*exp(t)
+  qb <- dtrunc(t, spec = 'exp', rate = beta_hat, a = l, b = u)
+  d_log_qb <- (1/beta_hat) - t - 
+    (u*exp(-beta_hat*u) - l*exp(-beta_hat*l))/(exp(-beta_hat*l) - exp(-beta_hat*u))
+  
+  return(-((norm_S^2)*(fs/qb)*qb*d_log_qb + (fs/qb-1)*d_normS_sq)/(norm_S^4))
+}
+
+d_log_qb_xi <- sapply(xi, function(t){
+  return(
+    (1/beta_hat) - t - 
+      (u*exp(-beta_hat*u) - l*exp(-beta_hat*l))/(exp(-beta_hat*l) - exp(-beta_hat*u)) 
+  )
+})
+
+d2_log_qb <- -(1/(beta_hat^2)) - (((l^2)*exp(-beta_hat*l) - (u^2)*exp(-beta_hat*u))/(exp(-beta_hat*l) - exp(-beta_hat*u)) - 
+                                      ((u*exp(-beta_hat*u) - l*exp(-beta_hat*l))/(exp(-beta_hat*l) - exp(-beta_hat*u)))^2)
+
+d_theta0 <- sum(sapply(xi, d_S2)*ni)/N
+d_delta0 <- sum(sapply(xi, d_S2)*mi)/M
+d_theta_T <- 1/(1-delta0_hat)
+d_delta_T <- (theta0_hat - 1)/((1-delta0_hat)^2)
+cov_term <- sum(d_log_qb_xi*S2_vec*mi)/M
+V_hat <- sum((d_log_qb_xi^2)*mi)/M
+J_hat <- -sum(mi*d2_log_qb)/k
+cb_hat <- M/k
+
+var_S2_F_hat <- sum((S2_vec^2)*ni)/N - (theta0_hat^2)
+var_S2_Fb_hat <- sum((S2_vec^2)*mi)/M - (delta0_hat^2)
+
+denom1 <- M*var_S2_F_hat*(d_theta_T^2)
+denom2 <- N*var_S2_Fb_hat*(d_delta_T^2)
+denom3 <- N*(cb_hat^2)*(V_hat/(J_hat^2))*((d_theta_T*d_theta0 + d_delta_T*d_delta0)^2)
+denom4 <- 2*N*(cb_hat/J_hat)*d_delta_T*cov_term*(d_theta_T*d_theta0 + d_delta_T*d_delta0)
+
+test_denom <- sqrt(denom1 + denom2 + denom3 + denom4)
+
+test_stat <- test_num/test_denom
+p_val <- pnorm(test_stat, lower.tail = FALSE)
+
+qb <- function(y) dtrunc(y, spec = 'exp', rate = beta_hat, a = l, b = u)
+
+plot(y = mi, x = xi,
+     pch = 16, col = 'grey', xlab = 'log(x)',
+     main = TeX('Estimated proposal bkg $q_b(x; \\hat{beta})$ on bkg data'))
+
+curve(M*qb(x)*(u-l)/(k+1), col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,
+      lty = 1)
+
+plot(y = ni, x = xi,
+     pch = 16, col = 'grey', xlab = 'log(x)',
+     main = TeX('Estimated proposal bkg $q_b(x; \\hat{beta})$ on physics data'))
+
+curve(N*qb(x)*(u-l)/(k+1), col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,
+      lty = 1)
+text(x = 2.5, y = 60, 
+     TeX(sprintf(
+       paste0('$\\hat{\\eta} = %.4f$, $p$-value: ', as.character(round(p_val, 6)), '; $\\sigma$-signif.: %.1f'),
+       eta_hat, qnorm(p_val, lower.tail = FALSE))
+     ))
