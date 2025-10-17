@@ -10,3 +10,4 @@ temp_*.R
 *.log
 *.sh#
 *.root
+*.Ds_Store
