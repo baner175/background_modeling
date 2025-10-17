@@ -59,7 +59,7 @@ unbinned_res <- simulated_power_unbinned(eta = eta, n_phys = n_phys,
                                             r = bkg_to_phys_ratio, nsims = B,
                                             seed = 12345, signif.level = 0.05)
 
-power_res <- data.frame(cbind(binned_res, unbinned_res))
+power_res <- data.frame(t(c(binned_res, unbinned_res)))
 colnames(power_res) <- paste0(c(paste0(n_bins, ' - bins'), 'unbinned'), ' (beta estimated)')
 
 file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
