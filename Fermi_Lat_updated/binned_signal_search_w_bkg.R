@@ -128,6 +128,9 @@ test_denom <- sqrt(denom1 + denom2 + denom3 + denom4)
 test_stat <- test_num/test_denom
 p_val <- pnorm(test_stat, lower.tail = FALSE)
 
+std_err <- test_denom/(sqrt(M*N))
+ci_95 <- eta_hat + c(-1,1)*qnorm(0.975)*std_err
+
 qb <- function(y) dtrunc(y, spec = 'exp', rate = beta_hat, a = l, b = u)
 
 plot(y = mi, x = xi,
@@ -148,3 +151,9 @@ text(x = 2.5, y = 60,
        paste0('$\\hat{\\eta} = %.4f$, $p$-value: ', as.character(round(p_val, 6)), '; $\\sigma$-signif.: %.1f'),
        eta_hat, qnorm(p_val, lower.tail = FALSE))
      ))
+text(x = 2.5, y = 50, 
+     TeX(sprintf(
+       paste0('95 \\%% CI for $\\hat{\\eta}$: [ %.4f, %.4f]'),
+       ci_95[1], ci_95[2])
+     ))
+
