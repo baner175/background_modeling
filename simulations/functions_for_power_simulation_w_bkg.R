@@ -305,14 +305,6 @@ simulated_power_unbinned <- function(eta, n_phys,
                                             scale = l, shape = beta_hat)
                                return((fs/qb-1)/(norm_S^2))
                              })
-        d_normS2 <- -integrate(function(x){
-          fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
-                       mean = mean_sig, sd = sd_sig)
-          qb <- dtrunc(x, spec = 'pareto', a = l, b = u,
-                       scale = l, shape = beta_hat)
-          d_log_qb <- 1/beta_hat - log(x) - (log(u)*u^(-beta_hat) - log(l)*l^(-beta_hat))/(l^(-beta_hat) - u^(-beta_hat))
-          return(((fs^2)/qb)*d_log_qb)
-        },l, u)$value
         d_S2 <- function(x){
           fs <- dtrunc(x, a = l, b = u, spec = 'norm', 
                        mean = mean_sig, sd = sd_sig)

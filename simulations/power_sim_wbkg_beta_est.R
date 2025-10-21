@@ -1,4 +1,5 @@
 rm(list = ls())
+library(truncdist)
 ## Global parameters ##
 
 #parameters for the signal
@@ -19,10 +20,6 @@ bkg_rate <- 3.3; bkg_shape <- 0.5
 fb_true <- function(x) dtrunc(x, a = l, b = u, spec = 'gamma',
                               rate = bkg_rate, shape = bkg_shape)
 
-gb <- function(x, beta = beta0){
-  dtrunc(x, spec = 'pareto', a = l, b = u,
-         scale = l, shape = beta)
-}
 
 source('functions_for_power_simulation_w_bkg.R')
 
