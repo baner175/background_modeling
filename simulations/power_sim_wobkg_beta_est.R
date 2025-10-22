@@ -42,7 +42,7 @@ opt_parser <- OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 
 B <- as.numeric(opt$N_iter); n_phys <- as.numeric(opt$n_phys)
-eta <- as.numeric(opt$eta); lambda <- as.numeric(opt$lamda)
+eta <- as.numeric(opt$eta); lambda <- as.numeric(opt$lambda)
 eps <- as.numeric(opt$eps)
 
 # Calculating signal region:
