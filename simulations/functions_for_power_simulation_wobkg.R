@@ -212,6 +212,7 @@ simulated_power_binned <- function(eta, nbins, T_phys, lambda,
         sqrt(N)*theta_0_hat/sig_theta0_hat
       }
   }
+  stopCluster(cl)
   p_vals <- pnorm(test_stat_eta, lower.tail = FALSE)
   simulated_power <- mean(p_vals < signif.level)
   return(simulated_power)
@@ -334,7 +335,7 @@ simulated_power_unbinned <- function(eta, n_phys, lambda,
         
         sqrt(n_phys)*theta_0_hat/sig_theta0_hat
       }
-  }else{ #<----- start from here
+  }else{
     norm_S <- integrate(function(x) {
       fs <- dtrunc(x, a = l, b = u, spec = 'norm',
                    mean = mean_sig, sd = sd_sig)
@@ -379,6 +380,7 @@ simulated_power_unbinned <- function(eta, n_phys, lambda,
         sqrt(n_phys)*theta_0_hat/sig_theta0_hat
       }
   }
+  stopCluster(cl)
   p_vals <- pnorm(test_stat_eta, lower.tail = FALSE)
   simulated_power <- mean(p_vals < signif.level)
   return(simulated_power)
