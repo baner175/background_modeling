@@ -10,7 +10,7 @@ l <- 1; u <- 2
 
 n_bins <- c(30, 50, 100)
 
-# signal density aand CDF
+# signal density and CDF
 fs <- function(x, mean = mean_sig) dtrunc(x, a = l, b = u, spec = 'norm', mean = mean, sd = sd_sig)
 Fs <- function(x) ptrunc(x, a = l, b = u, spec = 'norm', mean = mean_sig, sd = sd_sig)
 
