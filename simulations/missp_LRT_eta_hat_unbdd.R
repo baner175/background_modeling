@@ -5,7 +5,25 @@ library(VGAM)
 library(doSNOW)
 library(parallel)
 library(foreach)
+library(optparse)
 l <- 1; u <- 2
+
+option_list <- list(
+  make_option(c("-e", "--eta"), type = "double", default = 0,
+              help = "true value of eta", metavar = "number"),
+  make_option(c("-B", "--N_iter"), type = "integer", default = 1e4,
+              help = "Number of Iterations", metavar = "number"),
+  make_option(c('-n', '--n_samp'), type = "integer", default = 2e3,
+              help = 'Expected physics sample size', metavar = "number")
+)
+
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+
+eta_true <- as.numeric(opt$eta); B <- as.numeric(opt$N_iter);
+n_samp <- as.numeric(opt$n_samp)
+
+
 ################################################################
 ################ SIGNAL AND SIGNAL REGION ######################
 ################################################################
@@ -69,8 +87,6 @@ neg_ll <- function(eta, data){
   return(-sum(log(fi)))
 }
 
-B <- 1e4
-n_samp <- 1e3
 set.seed(12345)
 seeds <- sample.int(.Machine$integer.max, B)
 cl <- makeCluster(8)
@@ -120,7 +136,8 @@ if(eta_true > 0)
   df <- df[,1]
 }
 
-file_name <- paste0('Results/LRT', 
+file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
+                    'Results/LRT', 
                     '_B_', B, 
                     '_n_samp_', n_samp,
                     '_eta_', eta_true,
