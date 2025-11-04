@@ -32,7 +32,6 @@ n_samp <- as.numeric(opt$n_samp)
 mean_sig <- 1.28
 sd_sig <- 0.02
 
-eta_true <- 0
 
 # signal density
 fs <- function(x, mean = mean_sig) dtrunc(x, a = l, b = u, spec = 'norm', mean = mean, sd = sd_sig)
