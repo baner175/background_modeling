@@ -114,13 +114,17 @@ test_stat_LRT <- foreach(i = 1:B, .combine = rbind,
                      lower = -Inf, upper = Inf,
                      data = phys_samp)
     eta_hat <- ll_res$par
-    ll1 <- -ll_res$objective
-    ll_star <- -neg_ll(eta = eta_star, data = phys_samp)
-    ll_0 <- -neg_ll(eta = 0, data = phys_samp)
-    test_stat_star <- -2*(ll_star-ll1)
-    test_stat_0 <- -2*(ll_0-ll1)
+    eta_hat_C <- (eta_hat>0)*eta_hat
     
-    c(test_stat_star, test_stat_0)
+    ll_eta_hat <- -ll_res$objective
+    ll_eta_hat_C <- -neg_ll(eta = eta_hat_C, data = phys_samp)
+    ll_eta_star <- -neg_ll(eta = eta_star, data = phys_samp)
+    ll_0 <- -neg_ll(eta = 0, data = phys_samp)
+    
+    test_stat_eta_hat_C_0 <- 2*(ll_eta_hat_C - ll_0)
+    test_stat_eta_hat_eta_star <- 2*(ll_eta_hat - ll_eta_star)
+    
+    c(test_stat_eta_hat_eta_star, test_stat_eta_hat_C_0)
   }
 close(pb)
 
