@@ -12,7 +12,6 @@ l <- log(real_l); u <- log(real_u)
 
 mean_sig <- 3.5; sd_sig <- sqrt(0.01*3.5^2)
 eps <- 1e-3
-mu_in_qb <- -1; sigma_factor_in_qb <- 2
 
 # SIGNAL DENSITY:
 fs <- function(x, mean = mean_sig, sd = sd_sig)
@@ -39,12 +38,12 @@ ni <- sapply(1:k, function(i){
   sum(y>bin_ends[i] & y<=bin_ends[i+1])
 })
 
+
 qb_y_model <- function(beta){
+  qb_mass <- (1/beta)*((l+1)^(-beta) - (u+1)^(-beta))
   qb_i <- sapply(1:k, function(i){
     integrate(function(t){
-      dtrunc(t, spec = 'norm', mean = mu_in_qb,
-             sd = sqrt(sigma_factor_in_qb*beta),
-             a = l, b = u)
+      ((t+1)^(-beta-1))/qb_mass
     }, bin_ends[i], bin_ends[i+1])$value
   })
   return(-sum(ni*log(qb_i)))
@@ -54,35 +53,19 @@ beta_hat <- nlminb(start = 0.01,
                    objective = qb_y_model,
                    upper = Inf, lower = 0)$par
 
-h <- function(t) exp(-((t-mu_in_qb)^2)/(2*sigma_factor_in_qb*beta_hat))
-qb <- function(t) dtrunc(t, spec = 'norm',
-                         mean = mu_in_qb,
-                         sd = sqrt(sigma_factor_in_qb*beta_hat),
-                         a = l, b = u)
-d_log_h <- function(t) ((t-mu_in_qb)^2)/(2*sigma_factor_in_qb*(beta_hat^2))
-d2_log_h <- function(t) (-(t-mu_in_qb)^2)/(sigma_factor_in_qb*(beta_hat^3))
+h <- function(t) (t+1)^(-beta_hat-1)
+qb_mass <- integrate(h, l, u)$value
+qb <- function(t) h(t)/qb_mass
+
+d_log_h <- function(t) -log(t+1)
 E_qb_d_log_h <- integrate(function(t) d_log_h(t)*qb(t), l, u)$value
-
-d2_log_qb_int_1 <- integrate(function(y){
-  d2_log_h <- d2_log_h(y)
-  d_log_h <- d_log_h(y)
-  d2_h_by_h <- d2_log_h + d_log_h^2
-  qb <- qb(y)
-  return(d2_h_by_h*qb)
-}, l, u)$value
-d2_log_qb_int_2 <- integrate(function(y){
-  d_log_h <- d_log_h(y)
-  qb <- qb(y)
-  return(d_log_h*qb)
-}, l, u)$value
-
 d_log_qb <- function(t) d_log_h(t) - E_qb_d_log_h
 
-d2_log_qb <- function(t){
-  d2_log_h <- d2_log_h(t)
-  int_val <- d2_log_qb_int_1 - (d2_log_qb_int_2^2)
-  return(d2_log_h - int_val)
-}
+d2_log_qb_int1 <- integrate(function(t) {
+  ((log(t+1))^2)*qb(t)
+}, l, u)$value
+
+d2_log_qb <- -d2_log_qb_int1 + E_qb_d_log_h^2
 
 # Figuring out (mu_s -d, mu_s + d) that covers an area of 1-eps:
 find_d <- function(d)
@@ -144,8 +127,6 @@ signal_search <- function(lambda){
   
   d_log_qb_xi <- sapply(xi, d_log_qb)
   
-  d2_log_qb_xi <- sapply(xi, d2_log_qb)
-  
   d_normS_sq <- -(1-2*lambda)*integrate(function(y){
     fs <- dtrunc(exp(y), spec = 'norm', a = real_l, b = real_u,
                  mean = mean_sig, sd = sd_sig)*exp(y)
@@ -173,7 +154,7 @@ signal_search <- function(lambda){
     return(-((norm_S^2)*(fs/(gb^2))*(1-2*lambda)*qb*d_log_qb + (fs/gb-1)*d_normS_sq)/(norm_S^4))
   })
   
-  J_hat <- (-1/k)*sum(ni*d2_log_qb_xi)
+  J_hat <- (-1/k)*sum(ni*d2_log_qb)
   d_theta0 <- sum(ni*d_S2_xi)/N
   var_S2_F_hat <- sum((S2_vec^2)*ni)/N - theta0_hat^2
   c_hat <- N/k
@@ -202,7 +183,7 @@ res_sig_search <- sapply(lambda_seq, signal_search)
 res_sig_search <- cbind(lambda_seq, t(res_sig_search))
 res_sig_search <- data.frame(res_sig_search)
 colnames(res_sig_search) <- c("$\\lambda$", "$\\hat{\\eta}$", "$p$-value", '$\\sigma$-signif')
-caption <- paste0("Signal Search Results (Binned Data)")
+caption <- paste0("Signal Search Results (Uninned Data)")
 kable(res_sig_search, "html", digits = 5,
       booktabs = TRUE, escape = FALSE,
       caption = caption) |>

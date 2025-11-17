@@ -129,6 +129,7 @@ qb <- function(y) dtrunc(y, spec = 'exp', rate = beta_hat, a = l, b = u)
 
 hist(y, probability = TRUE, breaks = 50,
      col = 'white', xlab = 'log(x)',
+     xlim = c(0,3.55),
      main = TeX('Estimated proposal bkg $q_b(x; \\hat{beta})$ on bkg data'))
 
 curve(qb, col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,
@@ -136,6 +137,7 @@ curve(qb, col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,
 
 hist(x, probability = TRUE, breaks = 50,
      col = 'white', xlab = 'log(x)',
+     xlim = c(0,3.55),
      main = TeX('Estimated proposal bkg $q_b(x; \\hat{beta})$ on physics data'))
 
 curve(qb, col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,

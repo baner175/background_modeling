@@ -84,6 +84,7 @@ std_err <- test_denom/(sqrt(m*n))
 ci_95 <- eta_hat + c(-1,1)*qnorm(0.975)*std_err
 
 hist(y, probability = TRUE, breaks = 50,
+     xlim = c(0, 3.55),
      col = 'white', xlab = 'log(x)',
      main = TeX('Estimated proposal bkg $q_b(x; \\hat{beta})$ on bkg data'))
 
@@ -92,6 +93,7 @@ curve(gb, col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,
 
 hist(x, probability = TRUE, breaks = 50,
      col = 'white', xlab = 'log(x)',
+     xlim = c(0, 3.55),
      main = TeX('Estimated proposal bkg $q_b(x; \\hat{beta})$ on physics data'))
 
 curve(gb, col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,

@@ -11,8 +11,6 @@ real_l <- 1; real_u <- 35
 l <- log(real_l); u <- log(real_u)
 
 mean_sig <- 3.5; sd_sig <- sqrt(0.01*3.5^2)
-eps <- 1e-3
-mu_in_qb <- -1; sigma_factor_in_qb <- 2
 
 # SIGNAL DENSITY:
 fs <- function(x, mean = mean_sig, sd = sd_sig)
