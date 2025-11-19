@@ -55,17 +55,17 @@ gb <- function(x, lambda) {
   return(lambda*(fs_val1+fs_val2) + (1-2*lambda)*qb)
 }
 
+lambda_seq <- seq(0, 0.03, length.out = 4)
 curve(fb_true, from = M_lower - 0.05, to = M_upper + 0.05, col = 'brown',
       lwd = 2, lty = 1, ylab = '')
-lambda_seq <- seq(0, 0.025, length.out = 6)
 abline(v = c(M_lower, M_upper), lty = 3, lwd = 2,
        col = 'black')
 
-mycols <- c('black', 'red', 'orange', 'green', 'blue', 'purple')
+mycols <- c('black', 'red', 'green', 'purple')
 for(i in 1:length(lambda_seq)){
   curve(gb(x, lambda = lambda_seq[i]),
         col = mycols[i],
-        lwd = 2, lty = i, add = TRUE)
+        lwd = 2, lty = i+1, add = TRUE)
 }
 delta_seq <- sapply(lambda_seq, function(lam){
   normS <- integrate(function(x){
@@ -82,12 +82,14 @@ delta_seq <- sapply(lambda_seq, function(lam){
 })
 legend('top',
        legend = c(
-           TeX(
-             paste0(
-               sprintf('$g_b(\\lambda = %f);$', rev(lambda_seq)),
-               sprintf('   $\\delta = %.4f$', rev(delta_seq))
-               )
-           ),
-           TeX('$f_b(x)$')
+         TeX('$f_b(x)$'),
+         TeX(
+           paste0(
+             sprintf('$g_b(\\lambda = %f);$', rev(lambda_seq)),
+             sprintf('   $\\delta = %.4f$', rev(delta_seq))
+           )
+         )
        ),
-       bty = 'n', lty = c(6:1, 1), col = c(rev(mycols), 'brown'), lwd = 2)
+       bty = 'n', lty = c(1, (length(lambda_seq)+1):2), 
+       col = c('brown', rev(mycols)), lwd = 2)
+
