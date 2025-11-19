@@ -36,7 +36,7 @@ simulated_power_binned <- function(eta, nbins, T_phys, lambda,
                                    signif.level = 0.05,
                                    beta0 = NULL){
   cat("\n--------------------------------------\n")
-  cat(sprintf('Evaluating empirical power at eta = %.2f and lambda = %.2f', eta, lambda))
+  cat(sprintf('Evaluating empirical power at eta = %.2f and lambda = %.4f', eta, lambda))
   cat("\n--------------------------------------\n")
   
   k <- nbins; B <- nsims
@@ -225,7 +225,7 @@ simulated_power_unbinned <- function(eta, n_phys, lambda,
                                      beta0 = NULL){
   
   cat("\n--------------------------------------\n")
-  cat(sprintf('Evaluating empirical power at eta = %.2f', eta))
+  cat(sprintf('Evaluating empirical power at eta = %.2f and lambda = %.4f', eta, lambda))
   cat("\n--------------------------------------\n")
   
   B <- nsims
