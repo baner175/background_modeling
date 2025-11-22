@@ -139,7 +139,7 @@ delta_val <- integrate(function(x){
 }, l, u)$value
 
 power_res <- data.frame(t(c(binned_res, unbinned_res, delta_val)))
-colnames(power_res) <- c(paste0(c(paste0(n_bins, ' - bins'), 'unbinned'), ' (beta known)'),
+colnames(power_res) <- c(paste0(c(paste0(n_bins, ' - bins'), 'unbinned'), ' (beta est)'),
                          'delta_star')
 file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
                     'Results/WOBKG__',
