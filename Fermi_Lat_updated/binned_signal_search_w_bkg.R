@@ -128,7 +128,8 @@ test_denom <- sqrt(denom1 + denom2 + denom3 + denom4)
 test_stat <- test_num/test_denom
 p_val <- pnorm(test_stat, lower.tail = FALSE)
 
-std_err <- test_denom/(sqrt(M*N))
+sig_hat <- test_denom/(sqrt(M*N))
+std_err <- sig_hat*sqrt((M+N)/(M*N))
 ci_95 <- eta_hat + c(-1,1)*qnorm(0.975)*std_err
 
 qb <- function(y) dtrunc(y, spec = 'exp', rate = beta_hat, a = l, b = u)
