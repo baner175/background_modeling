@@ -7,6 +7,7 @@ reading material/*
 *.sh
 *.sh~
 temp_*.R
+simulations/Results/*
 *.log
 *.sh#
 *.root
