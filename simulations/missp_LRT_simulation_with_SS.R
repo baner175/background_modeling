@@ -52,9 +52,6 @@ gb <- function(x, beta = beta0){
                                    scale = l, shape = beta)
 }
 
-curve(fb_true, l, u, col = 'brown', lwd = 2, lty = 1)
-curve(gb, add = TRUE, col = 'red', lwd = 2, lty = 2)
-
 S <- function(x, beta = beta0) fs(x)/gb(x, beta) - 1
 norm_S <- function(beta = beta0) integrate(function(x) (S(x, beta)^2)*gb(x,beta),
                                            l, u)$value |> sqrt()
