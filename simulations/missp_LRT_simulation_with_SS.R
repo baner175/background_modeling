@@ -15,7 +15,7 @@ option_list <- list(
               help = "Number of Iterations", metavar = "number"),
   make_option(c('-n', '--n_samp'), type = "integer", default = 2e3,
               help = 'Expected physics sample size', metavar = "number"),
-  make_option(c('-l', '--lambda'), type = "integer", default = 0,
+  make_option(c('-l', '--lambda'), type = "double", default = 0,
               help = 'mixture parameter in gb', metavar = "number")
 )
 
