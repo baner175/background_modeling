@@ -21,7 +21,7 @@ fb_true <- function(x) dtrunc(x, a = l, b = u, spec = 'gamma',
                               rate = bkg_rate, shape = bkg_shape)
 
 
-source('functions_for_power_simulation_w_bkg.R')
+source('functions_for_power_simulation_wbkg.R')
 
 library(optparse)
 
