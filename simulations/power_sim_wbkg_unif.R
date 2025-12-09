@@ -13,6 +13,13 @@ n_bins <- c(30, 50, 100)
 # signal density
 fs <- function(x, mean = mean_sig) dtrunc(x, a = l, b = u, spec = 'norm', mean = mean, sd = sd_sig)
 
+#parameter for the true background
+bkg_rate <- 3.3; bkg_shape <- 0.5
+
+# true bkg density
+fb_true <- function(x) dtrunc(x, a = l, b = u, spec = 'gamma',
+                              rate = bkg_rate, shape = bkg_shape)
+
 source('functions_for_power_simulation_w_bkg.R')
 
 library(optparse)
