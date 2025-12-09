@@ -456,13 +456,13 @@ simulated_power_binned_uniform <- function(eta, nbins, T_phys,
       M <- rpois(1, lambda = T_bkg); N <- rpois(1, lambda = T_phys)
       
       # bkg-only sample:
-      bkg_samp <- truncdist::rtrunc(M, a = l, b = u, spec = 'gamma',
+      bkg_samp <- rtrunc(M, a = l, b = u, spec = 'gamma',
                          rate = bkg_rate, shape = bkg_shape)
       
       # physics-sample:
-      s_samp <- truncdist::rtrunc(N, a = l, b = u, spec = 'norm',
+      s_samp <- rtrunc(N, a = l, b = u, spec = 'norm',
                        mean = mean_sig, sd = sd_sig)
-      b_samp <- truncdist::rtrunc(N, a = l, b = u, spec = 'gamma',
+      b_samp <- rtrunc(N, a = l, b = u, spec = 'gamma',
                        rate = bkg_rate, shape = bkg_shape)
       u_mask <- runif(N)
       phys_samp <- ifelse(u_mask <= eta, s_samp, b_samp)
@@ -537,13 +537,13 @@ simulated_power_unbinned_uniform <- function(eta, n_phys,
                            .packages = c('truncdist', 'VGAM'),
                            .options.snow = opts) %dopar%
     {
-      bkg_samp <- truncdist::rtrunc(n_bkg, a = l, b = u, spec = 'gamma',
+      bkg_samp <- rtrunc(n_bkg, a = l, b = u, spec = 'gamma',
                          rate = bkg_rate, shape = bkg_shape)
       
       # physics-sample:
-      s_samp <- truncdist::rtrunc(n_phys, a = l, b = u, spec = 'norm',
+      s_samp <- rtrunc(n_phys, a = l, b = u, spec = 'norm',
                        mean = mean_sig, sd = sd_sig)
-      b_samp <- truncdist::rtrunc(n_phys, a = l, b = u, spec = 'gamma',
+      b_samp <- rtrunc(n_phys, a = l, b = u, spec = 'gamma',
                        rate = bkg_rate, shape = bkg_shape)
       u_mask <- runif(n_phys)
       phys_samp <- ifelse(u_mask <= eta, s_samp, b_samp)
