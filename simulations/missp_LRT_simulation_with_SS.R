@@ -15,6 +15,8 @@ option_list <- list(
               help = "Number of Iterations", metavar = "number"),
   make_option(c('-n', '--n_samp'), type = "integer", default = 2e3,
               help = 'Expected physics sample size', metavar = "number"),
+  make_option(c('-b', '--beta'), type = "double", default = NULL,
+              help = 'known value of the parameter in gb', metavar = "number"),
   make_option(c('-l', '--lambda'), type = "double", default = 0,
               help = 'mixture parameter in gb', metavar = "number")
 )
@@ -24,6 +26,7 @@ opt <- parse_args(opt_parser)
 
 B <- as.numeric(opt$N_iter); n_samp <- as.numeric(opt$n_samp)
 eta_true <- as.numeric(opt$eta); lambda <- as.numeric(opt$lambda)
+beta0 <- as.numeric(opt$beta)
 
 ################################################################
 ################ SIGNAL AND SIGNAL REGION ######################
@@ -46,7 +49,6 @@ fb_true <- function(x) dtrunc(x, a = l, b = u, spec = 'gamma',
 # true mixture density
 f <- function(x) eta_true*fs(x)+(1-eta_true)*fb_true(x)
 
-beta0 <- 3.87
 gb <- function(x, beta = beta0){
   lambda*fs(x) + (1-lambda)*dtrunc(x, spec = 'pareto', a = l, b = u,
                                    scale = l, shape = beta)
@@ -115,6 +117,7 @@ df <- data.frame('test_stat_LRT' = test_stat_LRT)
 file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
                     'Results/LRT',
                     '_B(', B,
+                    ')_beta0(', beta0,
                     ')_n_samp(', n_samp,
                     ')_eta(', eta_true,
                     ')_lambda(', lambda,
