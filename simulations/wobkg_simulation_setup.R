@@ -11,7 +11,7 @@ l <- 1; u <- 2
 mean_sig <- 1.28
 sd_sig <- 0.02
 
-eps <- 1e-3; beta <- 3.87
+eps <- 1e-3; beta <- 3.87 # or use 4
 
 # signal density
 fs <- function(x, mean = mean_sig) dtrunc(x, a = l, b = u, spec = 'norm', mean = mean, sd = sd_sig)
