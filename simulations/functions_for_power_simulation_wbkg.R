@@ -584,3 +584,192 @@ simulated_power_unbinned_uniform <- function(eta, n_phys,
   return(simulated_power)
 }
 
+
+simulated_power_binned_unif_fs <- function(eta, nbins, T_phys,
+                                           r, nsims, seed = 12345,
+                                           fs_mix = 0.5,
+                                           fs_gb_sig_factor = 1,
+                                           signif.level = 0.05){
+  cat("\n--------------------------------------\n")
+  cat(sprintf('Evaluating empirical power at eta = %.2f', eta))
+  cat("\n--------------------------------------\n")
+  
+  k <- nbins; B <- nsims; T_bkg <- r*T_phys
+  bin_ends <- seq(l, u, length.out = k+1)
+  xi <- (bin_ends[-1] + bin_ends[-(k+1)])/2
+  
+  set.seed(seed)
+  seeds <- sample.int(.Machine$integer.max, B)
+  cl <- makeCluster(8)
+  clusterEvalQ(cl, {
+    library(truncdist)
+    library(VGAM)
+  })
+  registerDoSNOW(cl)
+  clusterExport(cl, c('l', 'u', 'mean_sig', 'sd_sig', 'bkg_rate', 'bkg_shape',
+                      'qb_bkg_model_binned', 'qb_bkg_model_unbinned'))
+  pb <- txtProgressBar(max = B, style = 3)
+  progress <- function(n) setTxtProgressBar(pb, n)
+  opts <- list(progress = progress)
+  
+  norm_S <- integrate(function(x) {
+    fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                 mean = mean_sig, sd = sd_sig)
+    qb <- dunif(x, l, u)
+    fs_gb <- dtrunc(x, a = l, b = u, spec = 'norm',
+                    mean = mean_sig, sd = fs_gb_sig_factor*sd_sig)
+    gb <- fs_mix*fs_gb+(1-fs_mix)*qb
+    S_val <- (fs/gb-1)
+    return((S_val^2)*gb)
+  },l, u)$value |> sqrt()
+  test_stat_eta <- foreach(i = 1:B, .combine = c,
+                           .options.snow = opts) %dopar%
+    {
+      set.seed(seeds[i])
+      # total sample sizes:
+      M <- rpois(1, lambda = T_bkg); N <- rpois(1, lambda = T_phys)
+      
+      # bkg-only sample:
+      bkg_samp <- rtrunc(M, a = l, b = u, spec = 'gamma',
+                         rate = bkg_rate, shape = bkg_shape)
+      
+      # physics-sample:
+      s_samp <- rtrunc(N, a = l, b = u, spec = 'norm',
+                       mean = mean_sig, sd = sd_sig)
+      b_samp <- rtrunc(N, a = l, b = u, spec = 'gamma',
+                       rate = bkg_rate, shape = bkg_shape)
+      u_mask <- runif(N)
+      phys_samp <- ifelse(u_mask <= eta, s_samp, b_samp)
+      
+      ni <- sapply(1:k, function(i){
+        sum((phys_samp>bin_ends[i])&(phys_samp<=bin_ends[i+1]))
+      })
+      mi <- sapply(1:k, function(i){
+        sum((bkg_samp>bin_ends[i])&(bkg_samp<=bin_ends[i+1]))
+      })
+      
+      S2_vec <- sapply(xi,
+                       function(x){
+                         fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                                      mean = mean_sig, sd = sd_sig)
+                         qb <- dunif(x, l, u)
+                         fs_gb <- dtrunc(x, a = l, b = u, spec = 'norm',
+                                         mean = mean_sig, sd = fs_gb_sig_factor*sd_sig)
+                         gb <- fs_mix*fs_gb+(1-fs_mix)*qb
+                         S_val <- (fs/gb-1)
+                         return(S_val/(norm_S^2))
+                       })
+      theta_0_hat <- sum(S2_vec*ni)/N
+      delta_0_hat <- sum(S2_vec*mi)/M
+      
+      sig_theta0_hat_sq <- (1/N)*sum((S2_vec^2)*ni) - theta_0_hat^2
+      sig_delta0_hat_sq <- (1/M)*sum((S2_vec^2)*mi) - delta_0_hat^2
+      
+      eta_hat <- (theta_0_hat - delta_0_hat)/(1-delta_0_hat)
+      
+      test_num <- sqrt(N*M)*(eta_hat)
+      test_denom <- sqrt(
+        M*sig_theta0_hat_sq/((1- delta_0_hat)^2) + 
+          N*sig_delta0_hat_sq*((theta_0_hat-1)^2)/((1-delta_0_hat)^4)
+      )
+      test_num/test_denom
+    }
+  
+  p_vals <- pnorm(test_stat_eta, lower.tail = FALSE)
+  simulated_power <- mean(p_vals < signif.level)
+  return(simulated_power)
+}
+
+
+simulated_power_unbinned_unif_fs <- function(eta, n_phys,
+                                             r, nsims, seed = 12345,
+                                             fs_mix = 0.5,
+                                             fs_gb_sig_factor = 1,
+                                             signif.level = 0.05){
+  
+  cat("\n--------------------------------------\n")
+  cat(sprintf('Evaluating empirical power at eta = %.2f', eta))
+  cat("\n--------------------------------------\n")
+  
+  B <- nsims; n_bkg <- r*n_phys
+  set.seed(seed)
+  seeds <- sample.int(.Machine$integer.max, B)
+  cl <- makeCluster(8)
+  clusterEvalQ(cl, {
+    library(truncdist)
+    library(VGAM)
+  })
+  registerDoSNOW(cl)
+  clusterExport(cl, c('l', 'u', 'mean_sig', 'sd_sig', 'bkg_rate', 'bkg_shape',
+                      'qb_bkg_model_binned', 'qb_bkg_model_unbinned'))
+  pb <- txtProgressBar(max = B, style = 3)
+  progress <- function(n) setTxtProgressBar(pb, n)
+  opts <- list(progress = progress)
+  
+  norm_S <- integrate(function(x) {
+    fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                 mean = mean_sig, sd = sd_sig)
+    qb <- dunif(x, l, u)
+    fs_gb <- dtrunc(x, a = l, b = u, spec = 'norm',
+                    mean = mean_sig, sd = fs_gb_sig_factor*sd_sig)
+    gb <- fs_mix*fs_gb+(1-fs_mix)*qb
+    S_val <- (fs/gb-1)
+    return((S_val^2)*gb)
+  },l, u)$value |> sqrt()
+  test_stat_eta <- foreach(i = 1:B, .combine = c,
+                           .packages = c('truncdist', 'VGAM'),
+                           .options.snow = opts) %dopar%
+    {
+      bkg_samp <- rtrunc(n_bkg, a = l, b = u, spec = 'gamma',
+                         rate = bkg_rate, shape = bkg_shape)
+      
+      # physics-sample:
+      s_samp <- rtrunc(n_phys, a = l, b = u, spec = 'norm',
+                       mean = mean_sig, sd = sd_sig)
+      b_samp <- rtrunc(n_phys, a = l, b = u, spec = 'gamma',
+                       rate = bkg_rate, shape = bkg_shape)
+      u_mask <- runif(n_phys)
+      phys_samp <- ifelse(u_mask <= eta, s_samp, b_samp)
+      
+      S2_phys_vec <- sapply(phys_samp, 
+                            function(x){
+                              fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                                           mean = mean_sig, sd = sd_sig)
+                              qb <- dunif(x, l, u)
+                              fs_gb <- dtrunc(x, a = l, b = u, spec = 'norm',
+                                              mean = mean_sig, sd = fs_gb_sig_factor*sd_sig)
+                              gb <- fs_mix*fs_gb+(1-fs_mix)*qb
+                              S_val <- (fs/gb-1)
+                              return(S_val/(norm_S^2))
+                            })
+      S2_bkg_vec <- sapply(bkg_samp, 
+                           function(x){
+                             fs <- dtrunc(x, a = l, b = u, spec = 'norm',
+                                          mean = mean_sig, sd = sd_sig)
+                             qb <- dunif(x, l, u)
+                             fs_gb <- dtrunc(x, a = l, b = u, spec = 'norm',
+                                             mean = mean_sig, sd = fs_gb_sig_factor*sd_sig)
+                             gb <- fs_mix*fs_gb+(1-fs_mix)*qb
+                             S_val <- (fs/gb-1)
+                             return(S_val/(norm_S^2))
+                           })
+      theta_0_hat <- mean(S2_phys_vec)
+      delta_0_hat <- mean(S2_bkg_vec)
+      
+      sig_theta0_hat_sq <- mean(S2_phys_vec^2) - theta_0_hat^2
+      sig_delta0_hat_sq <- mean(S2_bkg_vec^2) - delta_0_hat^2
+      
+      eta_hat <- (theta_0_hat - delta_0_hat)/(1-delta_0_hat)
+      
+      test_num <- sqrt(n_phys*n_bkg)*(eta_hat)
+      test_denom <- sqrt(
+        n_bkg*sig_theta0_hat_sq/((1- delta_0_hat)^2) + 
+          n_phys*sig_delta0_hat_sq*((theta_0_hat-1)^2)/((1-delta_0_hat)^4)
+      )
+      test_num/test_denom
+    }
+  p_vals <- pnorm(test_stat_eta, lower.tail = FALSE)
+  simulated_power <- mean(p_vals < signif.level)
+  return(simulated_power)
+}
+
