@@ -81,13 +81,13 @@ d_normS_sq <- -integrate(function(t){
 }, l, u)$value
 
 d_S2 <- function(t){
-    fs <- dtrunc(exp(t), spec = 'norm', a = real_l, b = real_u,
-                 mean = mean_sig, sd = sd_sig)*exp(t)
-    qb <- dtrunc(t, spec = 'exp', rate = beta_hat, a = l, b = u)
-    d_log_qb <- (1/beta_hat) - t - 
-      (u*exp(-beta_hat*u) - l*exp(-beta_hat*l))/(exp(-beta_hat*l) - exp(-beta_hat*u))
-    
-    return(-((norm_S^2)*(fs/qb)*qb*d_log_qb + (fs/qb-1)*d_normS_sq)/(norm_S^4))
+  fs <- dtrunc(exp(t), spec = 'norm', a = real_l, b = real_u,
+               mean = mean_sig, sd = sd_sig)*exp(t)
+  qb <- dtrunc(t, spec = 'exp', rate = beta_hat, a = l, b = u)
+  d_log_qb <- (1/beta_hat) - t - 
+    (u*exp(-beta_hat*u) - l*exp(-beta_hat*l))/(exp(-beta_hat*l) - exp(-beta_hat*u))
+  
+  return(-((norm_S^2)*(fs/qb)*qb*d_log_qb + (fs/qb-1)*d_normS_sq)/(norm_S^4))
 }
 
 d_log_qb_yi <- sapply(y, function(t){
@@ -128,28 +128,34 @@ ci_95 <- eta_hat + c(-1,1)*qnorm(0.975)*std_err
 
 qb <- function(y) dtrunc(y, spec = 'exp', rate = beta_hat, a = l, b = u)
 
-hist(y, probability = TRUE, breaks = 50,
-     col = 'white', xlab = 'log(x)',
-     xlim = c(0,3.55),
-     main = TeX('Estimated proposal bkg $q_b(x; \\hat{beta})$ on bkg data'))
+# hist(y, probability = TRUE, breaks = 50,
+#      col = 'white', xlab = 'log(x)',
+#      xlim = c(0,3.55),
+#      main = TeX('Estimated proposal bkg $g_{\\hat{beta}}(x)$ on bkg data'),
+#      cex.main = 2,
+#      cex.lab = 2)
 
-curve(qb, col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,
-      lty = 1)
+# curve(qb, col = alpha('blue', 0.6), add = TRUE, lwd = 3,
+#       lty = 1)
 
 hist(x, probability = TRUE, breaks = 50,
      col = 'white', xlab = 'log(x)',
      xlim = c(0,3.55),
-     main = TeX('Estimated proposal bkg $q_b(x; \\hat{beta})$ on physics data'))
+     main = TeX('$g_{beta}(x) \\propto e^{-\\beta x}$'),
+     cex.main = 2,
+     cex.lab = 2)
 
-curve(qb, col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,
+curve(qb, col = alpha('blue', 0.6), add = TRUE, lwd = 3,
       lty = 1)
 text(x = 2.5, y = 0.8, 
      TeX(sprintf(
        paste0('$\\hat{\\eta} = %.4f$, $p$-value: ', as.character(round(p_val, 6)), '; $\\sigma$-signif.: %.1f'),
        eta_hat, qnorm(p_val, lower.tail = FALSE))
-       ))
-text(x = 2.5, y = 0.7, 
+     ),
+     cex = 1.5)
+text(x = 2.5, y = 0.6, 
      TeX(sprintf(
        paste0('95 \\%% CI for $\\hat{\\eta}$: [ %.4f, %.4f]'),
        ci_95[1], ci_95[2])
-     ))
+     ),
+     cex = 1.5)

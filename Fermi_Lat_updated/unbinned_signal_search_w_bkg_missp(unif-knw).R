@@ -84,28 +84,34 @@ sig_hat <- test_denom/(sqrt(m*n))
 std_err <- sig_hat*sqrt((m+n)/(m*n))
 ci_95 <- eta_hat + c(-1,1)*qnorm(0.975)*std_err
 
-hist(y, probability = TRUE, breaks = 50,
-     xlim = c(0, 3.55),
-     col = 'white', xlab = 'log(x)',
-     main = TeX('Estimated proposal bkg $q_b(x; \\hat{beta})$ on bkg data'))
+# hist(y, probability = TRUE, breaks = 50,
+#      xlim = c(0, 3.55),
+#      col = 'white', xlab = 'log(x)',
+#      main = TeX('Proposal bkg $g(x)$ on bkg data'),
+#      cex.main = 2,
+#      cex.lab = 2)
 
-curve(gb, col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,
-      lty = 1)
+# curve(gb, col = alpha('blue', 0.6), add = TRUE, lwd = 3,
+#       lty = 1)
 
 hist(x, probability = TRUE, breaks = 50,
      col = 'white', xlab = 'log(x)',
      xlim = c(0, 3.55),
-     main = TeX('Estimated proposal bkg $q_b(x; \\hat{beta})$ on physics data'))
+     main = TeX('$g(x) \\propto 1$'),
+     cex.main = 2,
+     cex.lab = 2)
 
-curve(gb, col = alpha('blue', 0.6), add = TRUE, lwd = 2.2,
+curve(gb, col = alpha('blue', 0.6), add = TRUE, lwd = 3,
       lty = 1)
 text(x = 2.5, y = 0.8, 
      TeX(sprintf(
        paste0('$\\hat{\\eta} = %.4f$, $p$-value: ', as.character(round(p_val, 6)), '; $\\sigma$-signif.: %.1f'),
        eta_hat, qnorm(p_val, lower.tail = FALSE))
-     ))
-text(x = 2.5, y = 0.7, 
+     ),
+     cex = 1.5)
+text(x = 2.5, y = 0.6, 
      TeX(sprintf(
        paste0('95 \\%% CI for $\\hat{\\eta}$: [ %.4f, %.4f]'),
        ci_95[1], ci_95[2])
-     ))
+     ),
+     cex = 1.5)
