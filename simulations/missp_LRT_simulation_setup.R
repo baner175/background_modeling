@@ -54,26 +54,27 @@ delta_vals <- sapply(eps_seq, delta_vs_eps)
 curve(fb_true, from = l, to = u, 
       col = 'black', lwd = 4, lty = 1, ylab = 'Density',
       cex.lab = 2, cex.axis = 2)
-my_cols <- c('orange', 'blue', 'red')
+my_cols <- c('blue', 'orange', 'red')
+my_lty <- c(2,6,4)
 
 # curve(gb, l, u, col = 'red')
 for(i in 1:length(eps_seq)){
   curve(gb(x, lambda = eps_seq[i]), col = my_cols[i],
-        lwd = 4, lty = i+1,
+        lwd = 4, lty = my_lty[i],
         add = TRUE)
 }
-legend(x = 1.29, y = 3.2,
+legend(x = 1.2, y = 4,
        legend = c(
          TeX('$f_b(x);$'),
          TeX('$q(x);$'),
          TeX(sprintf('$\\tilde{g}(x, \\epsilon = %.4f);$', eps_seq[-1]))
        ),
        col = c('black', my_cols),
-       lty = 1:(length(eps_seq)+1),
+       lty = c(1, my_lty),
        bty = 'n',
        lwd = 4,
-       y.intersp = 1.5, cex = 2)
-legend(x = 1.7, y = 3.2,
+       y.intersp = 1.5, cex = 1.5)
+legend(x = 1.62, y = 4,
        legend = TeX(sprintf('$\\tilde{\\delta} = %.5f $', c(0, round(delta_vals, 3)))),
        bty = 'n',
-       y.intersp = 1.5, cex = 2)
+       y.intersp = 1.5, cex = 1.5)
