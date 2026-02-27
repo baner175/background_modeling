@@ -1,32 +1,16 @@
 rm(list = ls())
-
+rm(list = ls())
 library(truncdist)
 library(VGAM)
 library(doSNOW)
 library(parallel)
 library(foreach)
-library(optparse)
+
 l <- 1; u <- 2
 
-option_list <- list(
-  make_option(c("-e", "--eta"), type = "double", default = 0,
-              help = "true value of eta", metavar = "number"),
-  make_option(c("-B", "--N_iter"), type = "integer", default = 1e4,
-              help = "Number of Iterations", metavar = "number"),
-  make_option(c('-n', '--n_samp'), type = "integer", default = 2e3,
-              help = 'Expected physics sample size', metavar = "number"),
-  make_option(c('-b', '--beta'), type = "double", default = NULL,
-              help = 'known value of the parameter in gb', metavar = "number"),
-  make_option(c('-l', '--lambda'), type = "double", default = 0,
-              help = 'mixture parameter in gb', metavar = "number")
-)
-
-opt_parser <- OptionParser(option_list = option_list)
-opt <- parse_args(opt_parser)
-
-B <- as.numeric(opt$N_iter); n_samp <- as.numeric(opt$n_samp)
-eta_true <- as.numeric(opt$eta); lambda <- as.numeric(opt$lambda)
-beta0 <- as.numeric(opt$beta)
+B <- 1e5; n_samp <- 5e3
+eta_true <- 0; lambda <- 0
+beta0 <- 4
 
 ################################################################
 ################ SIGNAL AND SIGNAL REGION ######################
@@ -59,16 +43,14 @@ norm_S <- function(beta = beta0) integrate(function(x) (S(x, beta)^2)*gb(x,beta)
                                            l, u)$value |> sqrt()
 
 neg_ll <- function(eta, data){
-  fi <- sapply(data, function(t){
-    eta*dtrunc(t, spec = 'norm', a = l, b = u,
-               mean = mean_sig, sd = sd_sig) + 
-      (1-eta)*(
-        lambda*dtrunc(t, spec = 'norm', a = l, b = u,
-                      mean = mean_sig, sd = sd_sig)
-        + (1-lambda)*dtrunc(t, spec = 'pareto', a = l, b = u,
-                                         scale = l, shape = beta0)
-      )
-  })
+  fi <- eta*dtrunc(data, spec = 'norm', a = l, b = u,
+                   mean = mean_sig, sd = sd_sig) + 
+    (1-eta)*(
+      lambda*dtrunc(data, spec = 'norm', a = l, b = u,
+                    mean = mean_sig, sd = sd_sig) + 
+        (1-lambda)*dtrunc(data, spec = 'pareto', a = l, b = u,
+                          scale = l, shape = beta0)
+    )
   return(-sum(log(fi)))
 }
 
@@ -114,8 +96,8 @@ stopCluster(cl)
 
 df <- data.frame('test_stat_LRT' = test_stat_LRT)
 
-file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
-                    'Results/LRT',
+file_name <- paste0('/Users/Aritra1/Desktop/Research/background_modeling/simulations/Results/LRT_simulations/',
+                    'LRT',
                     '_B(', B,
                     ')_beta0(', beta0,
                     ')_n_samp(', n_samp,
