@@ -124,7 +124,7 @@ d_S2 <- function(t){
   qb <- qb(t)
   d_log_qb <- d_log_qb(t)
   
-  return(-((norm_S^2)*(fs/qb)*qb*d_log_qb + (fs/qb-1)*d_normS_sq)/(norm_S^4))
+  return(-((norm_S^2)*(fs/qb)*d_log_qb + (fs/qb-1)*d_normS_sq)/(norm_S^4))
 }
 
 d_log_qb_xi <- sapply(xi, d_log_qb)
@@ -153,7 +153,7 @@ test_denom <- sqrt(denom1 + denom2 + denom3 + denom4)
 test_stat <- test_num/test_denom
 p_val <- pnorm(test_stat, lower.tail = FALSE)
 
-sig_hat <- test_denom/(sqrt(M*N))
+sig_hat <- test_denom/(sqrt(M+N))
 std_err <- sig_hat*sqrt((M+N)/(M*N))
 ci_95 <- eta_hat + c(-1,1)*qnorm(0.975)*std_err
 

@@ -119,7 +119,7 @@ d_S2 <- function(t){
   qb <- qb(t)
   d_log_qb <- d_log_qb(t)
   
-  return(-((norm_S^2)*(fs/qb)*qb*d_log_qb + (fs/qb-1)*d_normS_sq)/(norm_S^4))
+  return(-((norm_S^2)*(fs/qb)*d_log_qb + (fs/qb-1)*d_normS_sq)/(norm_S^4))
 }
 
 d_log_qb_yi <- sapply(y, d_log_qb)

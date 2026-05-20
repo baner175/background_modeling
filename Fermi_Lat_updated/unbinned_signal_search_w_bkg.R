@@ -87,7 +87,7 @@ d_S2 <- function(t){
   d_log_qb <- (1/beta_hat) - t - 
     (u*exp(-beta_hat*u) - l*exp(-beta_hat*l))/(exp(-beta_hat*l) - exp(-beta_hat*u))
   
-  return(-((norm_S^2)*(fs/qb)*qb*d_log_qb + (fs/qb-1)*d_normS_sq)/(norm_S^4))
+  return(-((norm_S^2)*(fs/qb)*d_log_qb + (fs/qb-1)*d_normS_sq)/(norm_S^4))
 }
 
 d_log_qb_yi <- sapply(y, function(t){
