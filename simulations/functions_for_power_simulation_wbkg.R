@@ -827,13 +827,13 @@ simulated_power_binned_npLRT <- function(eta, nbins, T_phys,
       mi <- sapply(1:k, function(i){
         sum((bkg_samp>bin_ends[i])&(bkg_samp<=bin_ends[i+1]))
       })
-      
+      mi_cens <- mi*(mi>=1) + (mi<1)
       opt <- nlminb(start = 0.01,
                     objective = npLRT_neg_log_lik,
                     lower = 0, upper = 1,
-                    ni = ni, mi = mi, si = si)
+                    ni = ni, mi = mi_cens, si = si)
       eta_hat <- opt$par
-      bi_hat <- mi/M
+      bi_hat <- mi_cens/sum(mi_cens)
       pi_eta_hat <- eta_hat*si + (1-eta_hat)*bi_hat
       
       2*sum(ni*(log(pi_eta_hat) - log(bi_hat)))
