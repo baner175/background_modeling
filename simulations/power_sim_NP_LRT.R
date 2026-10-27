@@ -47,9 +47,9 @@ n_bkg <- n_phys*bkg_to_phys_ratio
 # simulation results for nonparametric LRT:
 
 np_LRT_res <- sapply(n_bins, function(k){
-  simulated_power_binned(eta = eta, nbins = k, T_phys = n_phys,
-                         r = bkg_to_phys_ratio, nsims = B,
-                         seed = 12345, signif.level = 0.05)
+  simulated_power_binned_npLRT(eta = eta, nbins = k, T_phys = n_phys,
+                               r = bkg_to_phys_ratio, nsims = B,
+                               seed = 12345, signif.level = 0.05)
 })
 
 power_res <- data.frame(t(np_LRT_res))
@@ -57,7 +57,7 @@ colnames(power_res) <- paste0(n_bins, ' - bins')
 
 file_name <- paste0('/home/baner175/Desktop/background_modeling/simulations/',
                     'Results/WBKG__',
-                    'beta_estimated_',
+                    'NP_LRT_',
                     'eta(',eta,')_',
                     'n_bins(',paste0(n_bins, collapse = '-'),')_',
                     'B(',B,')_',
