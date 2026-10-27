@@ -27,6 +27,11 @@ qb_bkg_model_unbinned <- function(beta, data){
   return(-sum(log(qb_i)))
 }
 
+npLRT_neg_log_lik <- function(eta, ni, mi, si){
+  bi <- mi/sum(mi)
+  return(-sum(ni*log(eta*si + (1-eta)*bi)))
+}
+
 #-------------------------------------------------------------------------------
 ## simulation functions ##
 
@@ -773,3 +778,68 @@ simulated_power_unbinned_unif_fs <- function(eta, n_phys,
   return(simulated_power)
 }
 
+simulated_power_binned_npLRT <- function(eta, nbins, T_phys,
+                                         r, nsims, seed = 12345,
+                                         signif.level = 0.05){
+  cat("\n--------------------------------------\n")
+  cat(sprintf('Evaluating empirical power at eta = %.2f', eta))
+  cat("\n--------------------------------------\n")
+  
+  k <- nbins; B <- nsims; T_bkg <- r*T_phys
+  bin_ends <- seq(l, u, length.out = k+1)
+  xi <- (bin_ends[-1] + bin_ends[-(k+1)])/2
+  si <- sapply(1:k, function(i){
+    integrate(fs, bin_ends[i], bin_ends[i+1])$value
+  })
+  set.seed(seed)
+  seeds <- sample.int(.Machine$integer.max, B)
+  cl <- makeCluster(8)
+  registerDoSNOW(cl)
+  clusterExport(cl, c('l', 'u', 'mean_sig', 'sd_sig',
+                      'npLRT_neg_log_lik'))
+  pb <- txtProgressBar(max = B, style = 3)
+  progress <- function(n) setTxtProgressBar(pb, n)
+  opts <- list(progress = progress)
+  
+  test_stat_LRT <- foreach(i = 1:B, .combine = c,
+                           .packages = c('truncdist', 'VGAM'),
+                           .options.snow = opts) %dopar%
+    {
+      set.seed(seeds[i])
+      # total sample sizes:
+      M <- rpois(1, lambda = T_bkg); N <- rpois(1, lambda = T_phys)
+      
+      # bkg-only sample:
+      bkg_samp <- rtrunc(M, a = l, b = u, spec = 'gamma',
+                         rate = bkg_rate, shape = bkg_shape)
+      
+      # physics-sample:
+      s_samp <- rtrunc(N, a = l, b = u, spec = 'norm',
+                       mean = mean_sig, sd = sd_sig)
+      b_samp <- rtrunc(N, a = l, b = u, spec = 'gamma',
+                       rate = bkg_rate, shape = bkg_shape)
+      u_mask <- runif(N)
+      phys_samp <- ifelse(u_mask <= eta, s_samp, b_samp)
+      
+      ni <- sapply(1:k, function(i){
+        sum((phys_samp>bin_ends[i])&(phys_samp<=bin_ends[i+1]))
+      })
+      mi <- sapply(1:k, function(i){
+        sum((bkg_samp>bin_ends[i])&(bkg_samp<=bin_ends[i+1]))
+      })
+      
+      opt <- nlminb(start = 0.01,
+                    objective = npLRT_neg_log_lik,
+                    lower = 0, upper = 1,
+                    ni = ni, mi = mi, si = si)
+      eta_hat <- opt$par
+      bi_hat <- mi/M
+      pi_eta_hat <- eta_hat*si + (1-eta_hat)*bi_hat
+      
+      2*sum(ni*(log(pi_eta_hat) - log(bi_hat)))
+    }
+  
+  p_vals <- 0.5* pchisq(test_stat_LRT, df = 1, lower.tail = FALSE)
+  simulated_power <- mean(p_vals < signif.level)
+  return(simulated_power)
+}
