@@ -795,7 +795,7 @@ simulated_power_binned_npLRT <- function(eta, nbins, T_phys,
   seeds <- sample.int(.Machine$integer.max, B)
   cl <- makeCluster(8)
   registerDoSNOW(cl)
-  clusterExport(cl, c('l', 'u', 'mean_sig', 'sd_sig',
+  clusterExport(cl, c('l', 'u', 'mean_sig', 'sd_sig', 'bkg_rate', 'bkg_shape',
                       'npLRT_neg_log_lik'))
   pb <- txtProgressBar(max = B, style = 3)
   progress <- function(n) setTxtProgressBar(pb, n)
