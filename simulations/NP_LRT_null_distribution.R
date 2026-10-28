@@ -121,11 +121,11 @@ par(mgp = c(2, 0.8, 0))
 curve(0.5+0.5*pchisq(x, df = 1), lwd = 4, col = 'black',
       lty = 1, from = 0, to = 20, ylim = c(0,1), ylab = TeX('$P(X \\leq x)$'),
       cex.lab = 2, cex.axis = 2)
+abline(h = 0.5, v = 0, col = 'grey', lty = 2, lwd = 4)
 curve(ecdf_LRT_1e2, ylim = c(0,1), lwd = 4, add = TRUE, col = 'orange', lty = 2)
 curve(ecdf_LRT_50, ylim = c(0,1), lwd = 4, add = TRUE, col = 'red', lty = 6)
 curve(ecdf_LRT_30, ylim = c(0,1), lwd = 4, add = TRUE, col = 'blue', lty = 4)
 
-abline(h = 0.5, v = 0, col = 'grey', lty = 2, lwd = 4)
 legend(x = 11.5, y = 0.55,
        legend = c(
          TeX('$\\bar{\\chi}^2_{0 1}$'),
